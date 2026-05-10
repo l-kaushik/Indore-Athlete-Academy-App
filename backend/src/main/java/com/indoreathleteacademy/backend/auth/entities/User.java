@@ -19,6 +19,7 @@ public class User extends BaseEntity {
     private UserAuth auth;
 
     // TODO: update to nullable = false only after client confirmation
+    private String profileImage;
     private String fullName;
     private LocalDate dob;
     @Embedded
