@@ -15,10 +15,11 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserAuth extends BaseEntity {
 
-    @OneToOne(mappedBy = "auth")
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name = "user_id", unique = true)
     User user;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = true, unique = true)
     private String username;
 
     @Column(nullable = false, unique = true)
@@ -37,6 +38,8 @@ public class UserAuth extends BaseEntity {
             inverseJoinColumns = @JoinColumn(name = "role_id"),
             uniqueConstraints = @UniqueConstraint(columnNames = {"auth_id", "role_id"})
     )
+
+    @Builder.Default
     private Set<Role> roles = new HashSet<>();
 
     // oauth provider details
