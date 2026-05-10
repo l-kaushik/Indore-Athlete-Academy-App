@@ -1,0 +1,41 @@
+package com.indoreathleteacademy.backend.auth.services.impl;
+
+import com.indoreathleteacademy.backend.auth.dtos.UserDto;
+import com.indoreathleteacademy.backend.auth.dtos.UserRegisterDto;
+import com.indoreathleteacademy.backend.auth.entities.Provider;
+import com.indoreathleteacademy.backend.auth.entities.UserAuth;
+import com.indoreathleteacademy.backend.auth.repositories.UserAuthRepository;
+import com.indoreathleteacademy.backend.auth.repositories.UserRepository;
+import com.indoreathleteacademy.backend.auth.services.UserService;
+import com.indoreathleteacademy.backend.auth.utils.UserMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class UserServiceImpl implements UserService {
+
+    private final UserRepository userRepository;
+    private final UserAuthRepository userAuthRepository;
+
+    @Override
+    public void createUser(UserRegisterDto dto) {
+        if(dto.email() == null || dto.email().isBlank())
+            throw new IllegalArgumentException("Email is required");
+
+        // TODO: add separate endpoint for username lookup
+        if(dto.username() != null && userAuthRepository.existsByUsername(dto.username()))
+            throw new IllegalArgumentException("Username is already registered");
+
+        if(userAuthRepository.existsByEmailId(dto.email())) {
+            throw new IllegalArgumentException("User with given email is already exists");
+        }
+
+        UserAuth auth = UserMapper.toUserAuth(dto);
+        auth.setProvider(Provider.LOCAL);
+        auth.setLocked(false);
+        auth.setEnabled(false);
+        userAuthRepository.save(auth);
+    }
+
+    // TODO: implement email verification service
