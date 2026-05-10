@@ -11,6 +11,8 @@ import com.indoreathleteacademy.backend.auth.utils.UserMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
@@ -39,3 +41,40 @@ public class UserServiceImpl implements UserService {
     }
 
     // TODO: implement email verification service
+
+    @Override
+    public UserDto getUserByEmailId(String emailId) {
+        if(emailId == null || emailId.isBlank())
+            throw new IllegalArgumentException("Invalid email id provided");
+
+        UserAuth found = userAuthRepository.findByEmailId(emailId).orElseThrow(
+                () -> new IllegalArgumentException("Account not found!!")
+        );
+
+        return UserMapper.toDto(found);
+    }
+
+    @Override
+    public UserDto getUserByUsername(String username) {
+        if(username == null || username.isBlank())
+            throw new IllegalArgumentException("Invalid username provided!!");
+
+        UserAuth found = userAuthRepository.findByUsername(username).orElseThrow(
+                () -> new IllegalArgumentException("Account not found!!")
+        );
+
+        return UserMapper.toDto(found);
+    }
+
+    @Override
+    public UserDto getUserById(String userId) {
+        if(userId == null || userId.isBlank())
+            throw new IllegalArgumentException("Invalid user id provided!!");
+
+        UserAuth found = userAuthRepository.findById(UUID.fromString(userId)).orElseThrow(
+                () -> new IllegalArgumentException("Account not found!!")
+        );
+
+        return UserMapper.toDto(found);
+    }
+
