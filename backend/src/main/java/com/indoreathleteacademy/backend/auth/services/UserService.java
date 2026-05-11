@@ -8,5 +8,6 @@ public interface UserService {
     UserDto getUserByEmailId(String emailId);
     UserDto getUserByUsername(String username);
     UserDto getUserById(String userId);
+    boolean existsByUsername(String username);
     void deleteUser(String userId);
 }

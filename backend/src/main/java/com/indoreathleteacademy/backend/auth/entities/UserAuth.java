@@ -32,8 +32,11 @@ public class UserAuth extends BaseEntity implements UserDetails {
 
     private String passwordHash;
 
-    private boolean enabled;
-    private boolean locked;
+    @Builder.Default
+    private boolean enabled = true;
+
+    @Builder.Default
+    private boolean locked = false;
 
     // roles and permission
     @ManyToMany(fetch = FetchType.EAGER)

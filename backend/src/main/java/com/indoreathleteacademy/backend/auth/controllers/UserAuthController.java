@@ -6,6 +6,7 @@ import com.indoreathleteacademy.backend.auth.dtos.UserLoginResponseDto;
 import com.indoreathleteacademy.backend.auth.dtos.UserRegisterDto;
 import com.indoreathleteacademy.backend.auth.services.UserAuthService;
 import com.indoreathleteacademy.backend.auth.services.UserService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -23,13 +24,13 @@ public class UserAuthController {
     // logout
 
     @PostMapping("/register")
-    ResponseEntity<?> register(@RequestBody UserRegisterDto dto) {
+    ResponseEntity<?> register(@Valid @RequestBody UserRegisterDto dto) {
         authService.register(dto);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/login")
-    ResponseEntity<UserLoginResponseDto> login(@RequestBody UserLoginDto dto) {
+    ResponseEntity<UserLoginResponseDto> login(@Valid @RequestBody UserLoginDto dto) {
         return ResponseEntity.ok(authService.login(dto));
     }
 

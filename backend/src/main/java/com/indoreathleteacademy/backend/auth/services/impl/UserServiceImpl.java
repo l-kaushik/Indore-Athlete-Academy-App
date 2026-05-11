@@ -8,6 +8,7 @@ import com.indoreathleteacademy.backend.auth.repositories.UserAuthRepository;
 import com.indoreathleteacademy.backend.auth.repositories.UserRepository;
 import com.indoreathleteacademy.backend.auth.services.UserService;
 import com.indoreathleteacademy.backend.auth.utils.UserMapper;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -26,13 +27,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void createUser(UserRegisterDto dto) {
-        log.info("Attempting to create user account for username: {}, email: {}", dto.username(), dto.email());
+        log.info("Attempting user registration");
 
         if(dto.email() == null || dto.email().isBlank())
             throw new IllegalArgumentException("Email is required");
 
-        // TODO: add separate endpoint for username lookup
-        if(dto.username() != null && userAuthRepository.existsByUsername(dto.username()))
+        String username = (dto.username() == null || dto.username().isBlank()) ? dto.email() : dto.username();
+
+        if(userAuthRepository.existsByUsername(username))
             throw new IllegalArgumentException("Username is already registered");
 
         if(userAuthRepository.existsByEmailId(dto.email())) {
@@ -41,9 +43,8 @@ public class UserServiceImpl implements UserService {
 
         UserAuth auth = UserMapper.toUserAuth(dto);
         auth.setProvider(Provider.LOCAL);
-        auth.setLocked(false);
-        auth.setEnabled(true);
         auth.setPasswordHash(passwordEncoder.encode(dto.password()));
+        auth.setUsername(username);
         userAuthRepository.save(auth);
     }
 
@@ -67,7 +68,7 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid username provided!!");
 
         UserAuth found = userAuthRepository.findByUsername(username).orElseThrow(
-                () -> new IllegalArgumentException("Account not found!!")
+                () -> new EntityNotFoundException("Account not found!!")
         );
 
         return UserMapper.toDto(found);
@@ -79,10 +80,16 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("Invalid user id provided!!");
 
         UserAuth found = userAuthRepository.findById(UUID.fromString(userId)).orElseThrow(
-                () -> new IllegalArgumentException("Account not found!!")
+                () -> new EntityNotFoundException("Account not found!!")
         );
 
         return UserMapper.toDto(found);
+    }
+
+    // TODO: add rate limiting for this api to prevent multiple calls
+    @Override
+    public boolean existsByUsername(String username) {
+        return userAuthRepository.existsByUsername(username);
     }
 
     @Override
