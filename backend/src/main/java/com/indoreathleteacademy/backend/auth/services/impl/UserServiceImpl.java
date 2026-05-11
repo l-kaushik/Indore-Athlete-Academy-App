@@ -9,19 +9,25 @@ import com.indoreathleteacademy.backend.auth.repositories.UserRepository;
 import com.indoreathleteacademy.backend.auth.services.UserService;
 import com.indoreathleteacademy.backend.auth.utils.UserMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final UserAuthRepository userAuthRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Override
     public void createUser(UserRegisterDto dto) {
+        log.info("Attempting to create user account for username: {}, email: {}", dto.username(), dto.email());
+
         if(dto.email() == null || dto.email().isBlank())
             throw new IllegalArgumentException("Email is required");
 
@@ -36,7 +42,8 @@ public class UserServiceImpl implements UserService {
         UserAuth auth = UserMapper.toUserAuth(dto);
         auth.setProvider(Provider.LOCAL);
         auth.setLocked(false);
-        auth.setEnabled(false);
+        auth.setEnabled(true);
+        auth.setPasswordHash(passwordEncoder.encode(dto.password()));
         userAuthRepository.save(auth);
     }
 
@@ -78,3 +85,8 @@ public class UserServiceImpl implements UserService {
         return UserMapper.toDto(found);
     }
 
+    @Override
+    public void deleteUser(String userId) {
+
+    }
+}
