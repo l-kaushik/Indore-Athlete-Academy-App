@@ -25,7 +25,8 @@ public class SecurityConfig {
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorizeHttpRequest ->
-                        authorizeHttpRequest.requestMatchers("/api/v1/auth/**").permitAll())
+                        authorizeHttpRequest.requestMatchers(AuthConstants.PUBLIC_URLS).permitAll()
+                )
                 .logout(AbstractHttpConfigurer::disable)
                 .build();
     }

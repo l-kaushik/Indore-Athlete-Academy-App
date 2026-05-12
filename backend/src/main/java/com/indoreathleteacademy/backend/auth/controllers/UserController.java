@@ -18,6 +18,11 @@ public class UserController {
     private final UserService userService;
 
 //    ---------------------------------------------- PUBLIC ENDPOINTS ------------------------------------------------
+    @GetMapping("/check/username/{username}")
+    ResponseEntity<Boolean> findByUsername(@PathVariable("username") String username) {
+        return ResponseEntity.ok(userService.existsByUsername(username));
+    }
+
 
 //    ---------------------------------------------- PRIVATE ENDPOINTS ------------------------------------------------
     @GetMapping("/email/{emailId}")
