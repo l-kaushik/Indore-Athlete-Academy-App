@@ -58,7 +58,26 @@ public class JwtService {
                         "roles", roles,
                         "typ", "access"
                 ))
-                .signWith(key, Jwts.SIG.HS512) // HS512
+                .signWith(key, Jwts.SIG.HS512)
+                .compact();
+    }
+
+    public String generateRefreshToken(UserAuth auth, UUID jti) {
+        Instant now = Instant.now();
+        List<String> roles = auth.getRoles() == null ? List.of() :
+                auth.getRoles().stream().map(Role::getName).toList();
+        return Jwts.builder()
+                .id(jti.toString())
+                .subject(auth.getId().toString())
+                .issuer(issuer)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(now.plusSeconds(refreshTtlSeconds)))
+                .claims(Map.of(
+                        "email", auth.getEmailId(),
+                        "roles", roles,
+                        "typ", "refresh"
+                ))
+                .signWith(key, Jwts.SIG.HS512)
                 .compact();
     }
 
@@ -71,8 +90,17 @@ public class JwtService {
         return "access".equals(c.get("typ"));
     }
 
+    public boolean isRefreshToken(String token) {
+        Claims c = parse(token).getPayload();
+        return "refresh".equals(c.get("typ"));
+    }
+
     public UUID getUserId(String token) {
         Claims c = parse(token).getPayload();
         return UUID.fromString(c.getSubject());
+    }
+
+    public UUID getJti(String token) {
+        return UUID.fromString(parse(token).getPayload().getId());
     }
 }

@@ -4,6 +4,8 @@ import com.indoreathleteacademy.backend.auth.dtos.UserLoginDto;
 import com.indoreathleteacademy.backend.auth.dtos.TokenResponse;
 import com.indoreathleteacademy.backend.auth.dtos.UserRegisterDto;
 import com.indoreathleteacademy.backend.auth.services.UserAuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -18,8 +20,6 @@ public class UserAuthController {
     private final UserAuthService authService;
 
 //    ---------------------------------------------- PUBLIC ENDPOINTS ------------------------------------------------
-    // login
-    // logout
 
     @PostMapping("/register")
     ResponseEntity<?> register(@Valid @RequestBody UserRegisterDto dto) {
@@ -28,8 +28,18 @@ public class UserAuthController {
     }
 
     @PostMapping("/login")
-    ResponseEntity<TokenResponse> login(@Valid @RequestBody UserLoginDto dto) {
-        return ResponseEntity.ok(authService.login(dto));
+    ResponseEntity<TokenResponse> login(@Valid @RequestBody UserLoginDto dto, HttpServletResponse response) {
+        return ResponseEntity.ok(authService.login(dto, response));
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<TokenResponse> refreshToken(HttpServletRequest request, HttpServletResponse response) {
+        return ResponseEntity.ok(authService.refreshToken(request, response));
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(HttpServletRequest request, HttpServletResponse response){
+        return authService.logout(request, response);
     }
 
 //    ---------------------------------------------- PRIVATE ENDPOINTS ------------------------------------------------
