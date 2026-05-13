@@ -1,9 +1,10 @@
 package com.indoreathleteacademy.backend.auth.services.impl;
 
 import com.indoreathleteacademy.backend.auth.dtos.UserLoginDto;
-import com.indoreathleteacademy.backend.auth.dtos.UserLoginResponseDto;
+import com.indoreathleteacademy.backend.auth.dtos.TokenResponse;
 import com.indoreathleteacademy.backend.auth.dtos.UserRegisterDto;
 import com.indoreathleteacademy.backend.auth.entities.UserAuth;
+import com.indoreathleteacademy.backend.auth.security.JwtService;
 import com.indoreathleteacademy.backend.auth.services.UserAuthService;
 import com.indoreathleteacademy.backend.auth.services.UserService;
 
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class UserAuthServiceImpl implements UserAuthService {
 
     private final UserService userService;
+    private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
     @Override
@@ -28,11 +30,14 @@ public class UserAuthServiceImpl implements UserAuthService {
     }
 
     @Override
-    public UserLoginResponseDto login(UserLoginDto dto) {
+    public TokenResponse login(UserLoginDto dto) {
         log.info("Authentication attempt for user {}", dto.identifier());
         Authentication authenticated = authenticate(dto);
         UserAuth userAuth = (UserAuth) authenticated.getPrincipal();
-        return new UserLoginResponseDto(userAuth.getUsername());
+
+        String accessToken = jwtService.generateAccessToken(userAuth);
+
+        return new TokenResponse(accessToken, "", jwtService.getAccessTtlSeconds(), 0);
     }
 
     private Authentication authenticate(UserLoginDto dto) {

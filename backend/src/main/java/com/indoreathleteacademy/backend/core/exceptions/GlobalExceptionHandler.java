@@ -3,7 +3,6 @@ package com.indoreathleteacademy.backend.core.exceptions;
 import com.indoreathleteacademy.backend.core.dto.ApiError;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-@Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -25,10 +23,7 @@ public class GlobalExceptionHandler {
             CredentialsExpiredException.class
     })
     public ResponseEntity<ApiError> handleUnauthorized(Exception e, HttpServletRequest request ) {
-        var apiError = ApiError.of(
-                HttpStatus.UNAUTHORIZED.toString(),"Invalid username or password", request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(apiError);
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, e, request);
     }
 
     @ExceptionHandler({
@@ -36,26 +31,17 @@ public class GlobalExceptionHandler {
             LockedException.class
     })
     public ResponseEntity<ApiError> handleDisabled(Exception e, HttpServletRequest request) {
-        var apiError = ApiError.of(
-                HttpStatus.FORBIDDEN.toString(), e.getMessage(), request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(apiError);
+        return buildErrorResponse(HttpStatus.FORBIDDEN, e, request);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<ApiError> handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
-        var apiError = ApiError.of(
-                HttpStatus.BAD_REQUEST.toString(), e.getMessage(), request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(apiError);
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, e, request);
     }
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiError> handleEntity(EntityNotFoundException e, HttpServletRequest request) {
-        var apiError = ApiError.of(
-                HttpStatus.NOT_FOUND.toString(), e.getMessage(), request.getRequestURI()
-        );
-        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(apiError);
+        return buildErrorResponse(HttpStatus.NOT_FOUND, e, request);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -69,7 +55,15 @@ public class GlobalExceptionHandler {
                 .findFirst()
                 .orElse("Validation failed");
 
-        var apiError = ApiError.of(HttpStatus.BAD_REQUEST.toString(), message, request.getRequestURI());
+        var apiError = ApiError.of(
+                HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_GATEWAY.getReasonPhrase(),
+                message, request.getRequestURI()
+        );
         return ResponseEntity.badRequest().body(apiError);
+    }
+
+    private ResponseEntity<ApiError> buildErrorResponse(HttpStatus status, Exception e,  HttpServletRequest request) {
+        var apiError = ApiError.of(status.value(), status.getReasonPhrase(), e.getMessage(), request.getRequestURI());
+        return ResponseEntity.status(status).body(apiError);
     }
 }
