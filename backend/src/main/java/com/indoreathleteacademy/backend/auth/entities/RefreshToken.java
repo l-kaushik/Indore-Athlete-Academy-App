@@ -13,7 +13,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "refresh_tokens", indexes = {
         @Index(name = "refresh_tokens_jti_idx", columnList = "jti", unique = true),
-        @Index(name = "refresh_tokens_user_auth_idx", columnList = "userAuth_id")
+        @Index(name = "refresh_tokens_user_auth_idx", columnList = "user_auth_id")
 })
 @Getter
 @Setter
@@ -29,7 +29,7 @@ public class RefreshToken {
     private UUID jti;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "userAuth_id", nullable = false, updatable = false)
+    @JoinColumn(name = "user_auth_id", nullable = false, updatable = false)
     private UserAuth userAuth;
 
     @Column(updatable = false, nullable = false)
