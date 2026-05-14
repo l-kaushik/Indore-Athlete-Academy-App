@@ -3,8 +3,6 @@ package com.indoreathleteacademy.backend.auth.security;
 import com.indoreathleteacademy.backend.auth.entities.UserAuth;
 import com.indoreathleteacademy.backend.auth.repositories.UserAuthRepository;
 import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -62,7 +60,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new DisabledException("User account is disabled");
             }
             List<SimpleGrantedAuthority> authorities = userAuth.getRoles() == null ? List.of() :
-                        userAuth.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.getName())).toList();
+                        userAuth.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.name())).toList();
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userAuth, null, authorities);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

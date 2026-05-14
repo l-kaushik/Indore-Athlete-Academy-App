@@ -46,7 +46,7 @@ public class JwtService {
     public String generateAccessToken(UserAuth auth) {
         Instant now = Instant.now();
         List<String> roles = auth.getRoles() == null ? List.of() :
-                auth.getRoles().stream().map(Role::getName).toList();
+                auth.getRoles().stream().map(Role::name).toList();
         return Jwts.builder()
                 .id(Generators.timeBasedEpochGenerator().generate().toString())
                 .subject(auth.getId().toString())
@@ -65,7 +65,7 @@ public class JwtService {
     public String generateRefreshToken(UserAuth auth, UUID jti) {
         Instant now = Instant.now();
         List<String> roles = auth.getRoles() == null ? List.of() :
-                auth.getRoles().stream().map(Role::getName).toList();
+                auth.getRoles().stream().map(Role::name).toList();
         return Jwts.builder()
                 .id(jti.toString())
                 .subject(auth.getId().toString())

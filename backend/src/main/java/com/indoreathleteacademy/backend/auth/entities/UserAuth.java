@@ -38,16 +38,9 @@ public class UserAuth extends BaseEntity implements UserDetails {
     @Builder.Default
     private boolean locked = false;
 
-    // roles and permission
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "auth_id"),
-            inverseJoinColumns = @JoinColumn(name = "role_id"),
-            uniqueConstraints = @UniqueConstraint(columnNames = {"auth_id", "role_id"})
-    )
-
     @Builder.Default
+    @ElementCollection(fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
     private Set<Role> roles = new HashSet<>();
 
     // oauth provider details
@@ -59,7 +52,7 @@ public class UserAuth extends BaseEntity implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return roles.stream().map(role -> new SimpleGrantedAuthority(role.getName())).toList();
+        return roles.stream().map(role -> new SimpleGrantedAuthority(role.name())).toList();
     }
 
     @Override
