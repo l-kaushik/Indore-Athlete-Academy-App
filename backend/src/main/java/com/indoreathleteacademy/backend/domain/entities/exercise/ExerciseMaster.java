@@ -9,6 +9,8 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class ExerciseMaster extends BaseEntity {
 
     @Column(nullable = false, unique = true, length = 255)

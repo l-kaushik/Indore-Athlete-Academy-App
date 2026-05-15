@@ -1,0 +1,162 @@
+[
+  {
+    "name": "Push Up",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "CHEST",
+    "equipmentNeeded": "NONE",
+    "description": "Classic bodyweight chest exercise"
+  },
+  {
+    "name": "Pull Up",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "BACK",
+    "equipmentNeeded": "NONE",
+    "description": "Upper body pulling movement targeting the back"
+  },
+  {
+    "name": "Bodyweight Squat",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "LEGS",
+    "equipmentNeeded": "NONE",
+    "description": "Fundamental lower body bodyweight movement"
+  },
+  {
+    "name": "Plank",
+    "type": "TIME_BASED",
+    "defaultUnit": "SECONDS",
+    "muscleGroup": "CORE",
+    "equipmentNeeded": "NONE",
+    "description": "Core stabilization isometric exercise"
+  },
+  {
+    "name": "Jumping Jacks",
+    "type": "TIME_BASED",
+    "defaultUnit": "SECONDS",
+    "muscleGroup": "FULL_BODY",
+    "equipmentNeeded": "NONE",
+    "description": "Full body cardio warm-up exercise"
+  },
+  {
+    "name": "Dumbbell Bench Press",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "CHEST",
+    "equipmentNeeded": "DUMBBELL",
+    "description": "Chest pressing movement using dumbbells"
+  },
+  {
+    "name": "Barbell Bench Press",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "CHEST",
+    "equipmentNeeded": "BARBELL",
+    "description": "Compound chest strength exercise"
+  },
+  {
+    "name": "Deadlift",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "BACK",
+    "equipmentNeeded": "BARBELL",
+    "description": "Compound posterior chain exercise"
+  },
+  {
+    "name": "Bent Over Row",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "BACK",
+    "equipmentNeeded": "BARBELL",
+    "description": "Horizontal rowing exercise for upper back development"
+  },
+  {
+    "name": "Shoulder Press",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "SHOULDERS",
+    "equipmentNeeded": "DUMBBELL",
+    "description": "Overhead pressing movement for shoulder strength"
+  },
+  {
+    "name": "Lateral Raise",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "SHOULDERS",
+    "equipmentNeeded": "DUMBBELL",
+    "description": "Isolation exercise targeting side deltoids"
+  },
+  {
+    "name": "Bicep Curl",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "ARMS",
+    "equipmentNeeded": "DUMBBELL",
+    "description": "Arm isolation exercise for biceps"
+  },
+  {
+    "name": "Hammer Curl",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "ARMS",
+    "equipmentNeeded": "DUMBBELL",
+    "description": "Neutral grip curl variation targeting biceps and forearms"
+  },
+  {
+    "name": "Tricep Extension",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "ARMS",
+    "equipmentNeeded": "DUMBBELL",
+    "description": "Isolation exercise targeting triceps"
+  },
+  {
+    "name": "Leg Press",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "LEGS",
+    "equipmentNeeded": "MACHINE",
+    "description": "Machine-based compound lower body exercise"
+  },
+  {
+    "name": "Lat Pulldown",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "BACK",
+    "equipmentNeeded": "MACHINE",
+    "description": "Vertical pulling movement for lat development"
+  },
+  {
+    "name": "Russian Twist",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "CORE",
+    "equipmentNeeded": "NONE",
+    "description": "Rotational abdominal exercise"
+  },
+  {
+    "name": "Mountain Climbers",
+    "type": "TIME_BASED",
+    "defaultUnit": "SECONDS",
+    "muscleGroup": "CORE",
+    "equipmentNeeded": "NONE",
+    "description": "Dynamic cardio and core conditioning exercise"
+  },
+  {
+    "name": "Kettlebell Swing",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "FULL_BODY",
+    "equipmentNeeded": "KETTLEBELL",
+    "description": "Explosive hip hinge full body movement"
+  },
+  {
+    "name": "Resistance Band Row",
+    "type": "COUNT_BASED",
+    "defaultUnit": "REPS",
+    "muscleGroup": "BACK",
+    "equipmentNeeded": "RESISTANCE_BAND",
+    "description": "Resistance band rowing movement for back muscles"
+  }
+]
