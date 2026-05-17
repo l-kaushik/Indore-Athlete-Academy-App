@@ -13,6 +13,9 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+import java.util.Arrays;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -65,5 +68,25 @@ public class GlobalExceptionHandler {
     private ResponseEntity<ApiError> buildErrorResponse(HttpStatus status, Exception e,  HttpServletRequest request) {
         var apiError = ApiError.of(status.value(), status.getReasonPhrase(), e.getMessage(), request.getRequestURI());
         return ResponseEntity.status(status).body(apiError);
+    }
+
+    // Exceptions from domain package
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatch(MethodArgumentTypeMismatchException e, HttpServletRequest request) {
+
+        String message = "Invalid request parameter";
+
+        if (e.getRequiredType() != null && e.getRequiredType().isEnum()) {
+            Object[] allowedValues = e.getRequiredType().getEnumConstants();
+            message = String.format(
+                    "Invalid value '%s' for '%s'. Allowed values: %s",
+                    e.getValue(), e.getName(), Arrays.toString(allowedValues)
+            );
+        }
+
+        var apiError = ApiError.of(
+                HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                message, request.getRequestURI());
+        return ResponseEntity.badRequest().body(apiError);
     }
 }
