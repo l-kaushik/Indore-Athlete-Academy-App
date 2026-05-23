@@ -1,6 +1,6 @@
 package com.indoreathleteacademy.backend.domain.controller;
 
-import com.indoreathleteacademy.backend.domain.dtos.ExerciseSeedDto;
+import com.indoreathleteacademy.backend.domain.dtos.ExerciseDto;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
 import com.indoreathleteacademy.backend.domain.services.ExerciseService;
@@ -23,7 +23,7 @@ public class ExerciseController {
 //    ---------------------------------------------- COMMON ENDPOINTS ------------------------------------------------
     // get list of exercises based on filter
     @GetMapping
-    public ResponseEntity<Page<ExerciseSeedDto>> getFilteredExercises(
+    public ResponseEntity<Page<ExerciseDto>> getFilteredExercises(
             @RequestParam(required = false) String name,
             @RequestParam(required = false) ExerciseType type,
             @RequestParam(name = "muscle-group", required = false) MuscleGroup muscleGroup,

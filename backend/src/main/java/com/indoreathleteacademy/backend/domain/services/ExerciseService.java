@@ -1,6 +1,6 @@
 package com.indoreathleteacademy.backend.domain.services;
 
-import com.indoreathleteacademy.backend.domain.dtos.ExerciseSeedDto;
+import com.indoreathleteacademy.backend.domain.dtos.ExerciseDto;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
 import com.indoreathleteacademy.backend.domain.mapper.ExerciseMapper;
@@ -19,7 +19,7 @@ public class ExerciseService {
     private final ExerciseMasterRepository exerciseMasterRepository;
     private final ExerciseMapper exerciseMapper;
 
-    public Page<ExerciseSeedDto> getFilteredExercises(String name, ExerciseType type, MuscleGroup muscleGroup, int page, int size) {
+    public Page<ExerciseDto> getFilteredExercises(String name, ExerciseType type, MuscleGroup muscleGroup, int page, int size) {
         // TODO: can add sorting for better filter
         Pageable pageable = PageRequest.of(page, size);
         String normalizedName = name != null ? name.toLowerCase() : null;

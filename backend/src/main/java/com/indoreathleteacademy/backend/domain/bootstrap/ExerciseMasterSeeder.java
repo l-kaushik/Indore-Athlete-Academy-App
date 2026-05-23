@@ -1,6 +1,6 @@
 package com.indoreathleteacademy.backend.domain.bootstrap;
 
-import com.indoreathleteacademy.backend.domain.dtos.ExerciseSeedDto;
+import com.indoreathleteacademy.backend.domain.dtos.ExerciseDto;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseMaster;
 import com.indoreathleteacademy.backend.domain.repositories.ExerciseMasterRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,11 +38,11 @@ public class ExerciseMasterSeeder implements CommandLineRunner {
 
         InputStream inputStream = resource.getInputStream();
 
-        List<ExerciseSeedDto> seedData = objectMapper.readValue(inputStream, new TypeReference<List<ExerciseSeedDto>>() {});
+        List<ExerciseDto> seedData = objectMapper.readValue(inputStream, new TypeReference<List<ExerciseDto>>() {});
 
         List<ExerciseMaster> entities = new ArrayList<>();
 
-        for (ExerciseSeedDto dto : seedData) {
+        for (ExerciseDto dto : seedData) {
 
             if (repository.existsByName(dto.name())) {
                 continue;

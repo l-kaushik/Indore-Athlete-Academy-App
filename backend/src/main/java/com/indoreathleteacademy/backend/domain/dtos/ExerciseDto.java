@@ -5,8 +5,11 @@ import com.indoreathleteacademy.backend.domain.entities.exercise.EquipmentNeeded
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
 
+import java.util.UUID;
 
-public record ExerciseSeedDto(
+
+public record ExerciseDto(
+        UUID id,
         String name,
         ExerciseType type,
         DefaultUnit defaultUnit,
