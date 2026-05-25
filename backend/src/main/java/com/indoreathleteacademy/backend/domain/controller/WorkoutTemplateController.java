@@ -17,7 +17,7 @@ public class WorkoutTemplateController {
     private final WorkoutTemplateServiceImpl service;
 
     @PostMapping
-    public ResponseEntity<WorkoutTemplateDto> createTemplate(@RequestBody WorkoutTemplateDto dto) {
+    public ResponseEntity<WorkoutTemplateDto> createTemplate(@RequestBody WorkoutTemplateCreationDto dto) {
         return ResponseEntity.ok(service.createTemplate(dto));
     }
 }

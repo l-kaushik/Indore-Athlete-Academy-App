@@ -6,8 +6,6 @@ import com.indoreathleteacademy.backend.domain.entities.workout.WorkoutTemplate;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.UUID;
-
 @Mapper(componentModel = "spring")
 public interface WorkoutTemplateMapper extends BaseMapper<WorkoutTemplate, WorkoutTemplateDto> {
 
