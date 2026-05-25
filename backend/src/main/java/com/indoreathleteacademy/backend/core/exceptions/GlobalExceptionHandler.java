@@ -5,6 +5,7 @@ import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.authentication.DisabledException;
@@ -14,8 +15,11 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.exc.InvalidFormatException;
 
 import java.util.Arrays;
+import java.util.UUID;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -63,6 +67,34 @@ public class GlobalExceptionHandler {
                 message, request.getRequestURI()
         );
         return ResponseEntity.badRequest().body(apiError);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleHttpMessageNotReadableException(
+            HttpMessageNotReadableException e, HttpServletRequest request) {
+
+        String message = "Invalid request payload";
+        Throwable cause = e.getCause();
+
+        if (cause instanceof InvalidFormatException ife) {
+
+            String fieldName = ife.getPath().stream()
+                    .map(JacksonException.Reference::getPropertyName)
+                    .findFirst()
+                    .orElse("field");
+
+            Class<?> targetType = ife.getTargetType();
+
+            if (targetType == UUID.class) {
+                message = fieldName + " must be a valid UUID";
+            } else {
+                message = fieldName + " has invalid value";
+            }
+        }
+
+        ApiError error = ApiError.of(HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                message, request.getRequestURI());
+        return ResponseEntity.badRequest().body(error);
     }
 
     private ResponseEntity<ApiError> buildErrorResponse(HttpStatus status, Exception e,  HttpServletRequest request) {
