@@ -1,10 +1,14 @@
 package com.indoreathleteacademy.backend.domain.controller;
 
+import com.indoreathleteacademy.backend.domain.dtos.ExerciseDto;
+import com.indoreathleteacademy.backend.domain.dtos.WorkoutTemplateCreationDto;
 import com.indoreathleteacademy.backend.domain.dtos.WorkoutTemplateDto;
 import com.indoreathleteacademy.backend.domain.services.impl.WorkoutTemplateServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 import java.util.UUID;
 
 @RequiredArgsConstructor
@@ -25,5 +29,12 @@ public class WorkoutTemplateController {
     public ResponseEntity<WorkoutTemplateDto> getTemplateById(@PathVariable UUID id) {
         return ResponseEntity.ok(service.getTemplateById(id));
     }
+
+
+    @PostMapping("/{id}/exercises")
+    public ResponseEntity<ExerciseDto> createExercise(@PathVariable("id") UUID templateId, @RequestBody Map<String, UUID> body) {
+        return ResponseEntity.ok(service.createExercise(templateId, body.get("exerciseId")));
+    }
+
 
 }

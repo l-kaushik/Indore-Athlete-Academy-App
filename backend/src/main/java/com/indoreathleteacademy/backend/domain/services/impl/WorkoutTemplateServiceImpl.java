@@ -62,4 +62,24 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
                 new IllegalArgumentException("Template not found!!"));
     }
 
+    @Override
+    public ExerciseDto createExercise(UUID templateId, UUID exerciseId) {
+        log.info("Adding exercise reference for template");
+
+        int orderIndex = templateExerciseRepository.findMaxOrderIndexByTemplateId(templateId);
+        var template = repository.findById(templateId).orElseThrow(() ->
+                new IllegalArgumentException("Template not found"));
+        var exercise = exerciseRepository.findById(exerciseId).orElseThrow(() ->
+                new IllegalArgumentException("Exercise not found"));
+
+        WorkoutTemplateExercise templateExercise = WorkoutTemplateExercise.builder()
+                .template(template)
+                .exerciseMaster(exercise)
+                .orderIndex(++orderIndex)
+                .build();
+
+        var saved = templateExerciseRepository.save(templateExercise);
+
+        return exerciseMapper.toDto(saved.getExerciseMaster());
+    }
 }
