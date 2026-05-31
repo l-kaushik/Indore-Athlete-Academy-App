@@ -1,7 +1,9 @@
 package com.indoreathleteacademy.backend.domain.entities.workout;
 
 import com.indoreathleteacademy.backend.core.entities.BaseEntity;
+import com.indoreathleteacademy.backend.domain.entities.exercise.DefaultUnit;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseMaster;
+import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -26,15 +28,13 @@ public class WorkoutAssignmentExercise extends BaseEntity {
     @JoinColumn(name = "assignment_id", nullable = false)
     private WorkoutAssignment assignment;
 
-    // TODO: Think about how to make sure change in ExerciseMaster doesn't mess with assignment
-    //  1st solution, instead of join with ExerciseMaster, place actual fields
-//    private String exerciseNameSnapshot;
-//    private ExerciseType exerciseTypeSnapshot;
-//    private DefaultUnit defaultUnitSnapshot;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "exercise_id", nullable = false)
     private ExerciseMaster exercise;
+
+    private String exerciseNameSnapshot;
+    private ExerciseType exerciseTypeSnapshot;
+    private DefaultUnit defaultUnitSnapshot;
 
     @Column(name = "target_reps")
     private Integer targetReps;
@@ -43,7 +43,7 @@ public class WorkoutAssignmentExercise extends BaseEntity {
     private Duration targetDuration;
 
     @Column(name = "target_weight")
-    private Duration targetWeight;
+    private Integer targetWeight;
 
     @Column(name = "order_index", nullable = false)
     private Integer orderIndex;
