@@ -6,6 +6,8 @@ import com.indoreathleteacademy.backend.core.utils.FakerUtils;
 import com.indoreathleteacademy.backend.domain.dtos.ExerciseDto;
 import com.indoreathleteacademy.backend.domain.dtos.WorkoutTemplateCreationDto;
 import com.indoreathleteacademy.backend.domain.dtos.WorkoutTemplateDto;
+import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
+import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
 import com.indoreathleteacademy.backend.domain.entities.workout.WorkoutTemplate;
 import com.indoreathleteacademy.backend.domain.entities.workout.WorkoutTemplateExercise;
 import com.indoreathleteacademy.backend.domain.mapper.ExerciseMapper;
@@ -17,8 +19,12 @@ import com.indoreathleteacademy.backend.domain.services.WorkoutTemplateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
@@ -63,6 +69,21 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
     }
 
     @Override
+    public WorkoutTemplateDto updateTemplate(UUID id, Map<String, String> body) {
+        String name = body.get("name");
+        String description = body.get("description");
+
+        WorkoutTemplate template = repository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("Workout template not found")
+        );
+
+        if(!name.isBlank()) template.setName(name);
+        if(!description.isBlank()) template.setDescription(description);
+
+        return mapper.toDto(repository.save(template));
+    }
+
+    @Override
     public ExerciseDto createExercise(UUID templateId, UUID exerciseId) {
         log.info("Adding exercise reference for template");
 
@@ -81,5 +102,18 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
         var saved = templateExerciseRepository.save(templateExercise);
 
         return exerciseMapper.toDto(saved.getExerciseMaster());
+    }
+
+    @Override
+    public Page<ExerciseDto> getExercises(UUID templateId, String name, ExerciseType type, MuscleGroup muscleGroup, int page, int size) {
+       log.info("Fetching exercises for a workout template request");
+        Pageable pageable = PageRequest.of(page, size);
+        String normalizedName = name != null ? name.toLowerCase() : null;
+        return templateExerciseRepository.findByTemplateId(templateId, normalizedName, type, muscleGroup, pageable);
+    }
+
+    @Override
+    public void removeExercise(UUID templateId, UUID exerciseId) {
+
     }
 }
