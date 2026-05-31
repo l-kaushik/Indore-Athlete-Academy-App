@@ -3,6 +3,7 @@ package com.indoreathleteacademy.backend.core.exceptions;
 import com.indoreathleteacademy.backend.core.dto.ApiError;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -120,5 +121,20 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST.value(), HttpStatus.BAD_REQUEST.getReasonPhrase(),
                 message, request.getRequestURI());
         return ResponseEntity.badRequest().body(apiError);
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ApiError> handleDataIntegrityViolation(DataIntegrityViolationException ex, HttpServletRequest request) {
+
+        HttpStatus status = HttpStatus.CONFLICT;
+        String message = "The operation could not be completed because it violates a data integrity constraint.";
+        String rootMessage = ex.getMostSpecificCause().getMessage();
+
+        if (rootMessage != null && rootMessage.contains("violates foreign key constraint")) {
+            message = "One or more referenced resources do not exist.";
+        }
+
+        ApiError error = ApiError.of(status.value(), status.getReasonPhrase(), message, request.getRequestURI());
+        return ResponseEntity.status(status).body(error);
     }
 }
