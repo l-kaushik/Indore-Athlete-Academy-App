@@ -4,6 +4,7 @@ import com.indoreathleteacademy.backend.auth.repositories.UserAuthRepository;
 import com.indoreathleteacademy.backend.domain.dtos.*;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
+import com.indoreathleteacademy.backend.domain.entities.workout.AssignmentStatus;
 import com.indoreathleteacademy.backend.domain.entities.workout.WorkoutAssignment;
 import com.indoreathleteacademy.backend.domain.entities.workout.WorkoutAssignmentExercise;
 import com.indoreathleteacademy.backend.domain.mapper.AssignmentMapper;
@@ -53,12 +54,27 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
+    public AssignmentDto updateStatus(UUID id, AssignmentStatus status) {
+        WorkoutAssignment assignment = repository.findById(id).orElseThrow(
+                () -> new IllegalArgumentException("Workout assignment not found!!")
+        );
+
+        if(assignment.getStatus().equals(status)) {
+            return mapper.toDto(assignment);
+        }
+
+        assignment.setStatus(status);
+
+        return mapper.toDto(repository.save(assignment));
+    }
+
+    @Override
     public AssignmentExerciseDto createExercise(UUID assignmentId, AssignmentExerciseCreationDto dto) {
         log.info("Adding exercise reference for assignment");
 
         int orderIndex = assignmentExerciseRepository.findMaxOrderIndexByAssignmentId(assignmentId);
         var exercise = exerciseMasterRepository.findById(dto.exerciseId()).orElseThrow(
-                () -> new IllegalArgumentException("Exercise not found !!")
+                () -> new IllegalArgumentException("Exercise not found!!")
         );
 
         WorkoutAssignmentExercise assignmentExercise = WorkoutAssignmentExercise.builder()

@@ -6,6 +6,7 @@ import com.indoreathleteacademy.backend.domain.dtos.AssignmentExerciseCreationDt
 import com.indoreathleteacademy.backend.domain.dtos.AssignmentExerciseDto;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
+import com.indoreathleteacademy.backend.domain.entities.workout.AssignmentStatus;
 import com.indoreathleteacademy.backend.domain.services.AssignmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -47,14 +48,9 @@ public class AssignmentController {
         return ResponseEntity.ok(service.getExercises(assignmentId, name, type, muscleGroup, page, size));
     }
 
-// update assignment status
-
-//    ---------------------------------------------- COMMON ENDPOINTS ------------------------------------------------
-// get assignments
-// get assignment details based on id
-
-//    ---------------------------------------------- TRAINER ENDPOINTS ------------------------------------------------
-// assign workout
-// remove assignment
+    @PutMapping("/{id}/status")
+    public ResponseEntity<AssignmentDto> updateStatus(@PathVariable("id") UUID id, @RequestParam AssignmentStatus status) {
+        return ResponseEntity.ok(service.updateStatus(id, status));
+    }
 
 }
