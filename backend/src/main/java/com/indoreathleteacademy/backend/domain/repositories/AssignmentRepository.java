@@ -10,4 +10,27 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface AssignmentRepository extends JpaRepository<WorkoutAssignment, UUID> {
+    @Query("""
+        SELECT new com.indoreathleteacademy.backend.domain.dtos.AssignmentDto(
+            wa.id,
+            wa.template.id,
+            wa.student.id,
+            wa.trainer.id,
+            wa.status,
+            wa.createdAt,
+            COUNT(wae.id)
+        )
+        FROM WorkoutAssignment wa
+        LEFT JOIN WorkoutAssignmentExercise wae
+            ON wae.assignment.id = wa.id
+        WHERE wa.id = :id
+        GROUP BY
+            wa.id,
+            wa.template.id,
+            wa.student.id,
+            wa.trainer.id,
+            wa.status,
+            wa.createdAt
+    """)
+    Optional<AssignmentDto> findByIdWithExerciseCount(@Param("id") UUID id);
 }
