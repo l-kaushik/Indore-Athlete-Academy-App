@@ -3,6 +3,7 @@ package com.indoreathleteacademy.backend.auth.services.impl;
 import com.indoreathleteacademy.backend.auth.dtos.UserDto;
 import com.indoreathleteacademy.backend.auth.dtos.UserRegisterDto;
 import com.indoreathleteacademy.backend.auth.entities.Provider;
+import com.indoreathleteacademy.backend.auth.entities.Role;
 import com.indoreathleteacademy.backend.auth.entities.UserAuth;
 import com.indoreathleteacademy.backend.auth.repositories.UserAuthRepository;
 import com.indoreathleteacademy.backend.auth.repositories.UserRepository;
@@ -15,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Set;
 import java.util.UUID;
 
 @Slf4j
@@ -45,6 +47,7 @@ public class UserServiceImpl implements UserService {
 
         UserAuth auth = UserMapper.toUserAuth(dto);
         auth.setProvider(Provider.LOCAL);
+        auth.setRoles(Set.of(Role.STUDENT));
         auth.setPasswordHash(passwordEncoder.encode(dto.password()));
         auth.setUsername(username);
         userAuthRepository.save(auth);

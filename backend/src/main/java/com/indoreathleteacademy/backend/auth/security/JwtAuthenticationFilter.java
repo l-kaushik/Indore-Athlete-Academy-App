@@ -22,6 +22,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -60,7 +61,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 throw new DisabledException("User account is disabled");
             }
             List<SimpleGrantedAuthority> authorities = userAuth.getRoles() == null ? List.of() :
-                        userAuth.getRoles().stream().map(role -> new SimpleGrantedAuthority(role.name())).toList();
+                        userAuth.getRoles().stream()
+                                .flatMap(role -> Stream.concat(Stream.of(new SimpleGrantedAuthority("ROLE_" + role.name())),
+                                        role.getPermissions().stream().map(permission -> new SimpleGrantedAuthority(permission.name()))))
+                                .toList();
             UsernamePasswordAuthenticationToken authentication =
                     new UsernamePasswordAuthenticationToken(userAuth, null, authorities);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
