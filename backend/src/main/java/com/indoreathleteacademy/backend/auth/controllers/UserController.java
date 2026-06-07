@@ -1,14 +1,15 @@
 package com.indoreathleteacademy.backend.auth.controllers;
 
 import com.indoreathleteacademy.backend.auth.dtos.UserDto;
+import com.indoreathleteacademy.backend.auth.entities.Role;
 import com.indoreathleteacademy.backend.auth.services.UserService;
 import lombok.AllArgsConstructor;
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequestMapping("api/v1/users")
@@ -26,6 +27,7 @@ public class UserController {
 
 //    ---------------------------------------------- PRIVATE ENDPOINTS ------------------------------------------------
     @GetMapping("/email/{emailId}")
+    @PreAuthorize(("hasRole('TRAINER')"))
     ResponseEntity<UserDto> getUserByEmailId(@PathVariable("emailId") String emailId) {
         return ResponseEntity.ok(userService.getUserByEmailId(emailId));
     }
@@ -36,8 +38,15 @@ public class UserController {
     }
 
     @GetMapping("/id/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     ResponseEntity<UserDto> getUserById(@PathVariable("id") String id) {
         return ResponseEntity.ok(userService.getUserById(id));
+    }
+
+    @PutMapping("/{id}/role/{role}")
+    @PreAuthorize("hasRole('ADMIN')")
+    ResponseEntity<UserDto> updateUserRole(@PathVariable("id") UUID id, @PathVariable("role") Role role){
+        return ResponseEntity.ok(userService.updateUserRole(id, role));
     }
 
 }

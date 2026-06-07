@@ -42,8 +42,6 @@ public class UserAuthController {
         return authService.logout(request, response);
     }
 
-//    add admin based endpoint that can update roles from student -> trainer
-
 //    ---------------------------------------------- PRIVATE ENDPOINTS ------------------------------------------------
 
 }
