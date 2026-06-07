@@ -8,11 +8,20 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Set;
 import java.util.UUID;
 
 public class CoreUtils {
     @Autowired
     private static final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+    public static final Set<String> RESERVED = Set.of(
+            "admin",
+            "administrator",
+            "root",
+            "system",
+            "support"
+    );
 
     private static final TimeBasedEpochGenerator UUID_V7_GENERATOR = Generators.timeBasedEpochGenerator();
 
