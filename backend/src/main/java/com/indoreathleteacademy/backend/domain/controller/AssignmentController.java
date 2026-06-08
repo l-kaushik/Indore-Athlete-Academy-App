@@ -2,7 +2,6 @@ package com.indoreathleteacademy.backend.domain.controller;
 
 import com.indoreathleteacademy.backend.domain.dtos.AssignmentCreationDto;
 import com.indoreathleteacademy.backend.domain.dtos.AssignmentDto;
-import com.indoreathleteacademy.backend.domain.dtos.AssignmentExerciseCreationDto;
 import com.indoreathleteacademy.backend.domain.dtos.AssignmentExerciseDto;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
@@ -11,6 +10,7 @@ import com.indoreathleteacademy.backend.domain.services.AssignmentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -22,6 +22,7 @@ public class AssignmentController {
     private final AssignmentService service;
 
     @PostMapping
+    @PreAuthorize("hasRole('TRAINER')")
     public ResponseEntity<AssignmentDto> createAssignment(@RequestBody AssignmentCreationDto dto) {
         return ResponseEntity.ok(service.createAssignment(dto));
     }
@@ -29,12 +30,6 @@ public class AssignmentController {
     @GetMapping("/{id}")
     public ResponseEntity<AssignmentDto> getAssignmentById(@PathVariable("id") UUID id) {
         return ResponseEntity.ok(service.getAssignmentById(id));
-    }
-
-
-    @PostMapping("/{id}/exercises")
-    public ResponseEntity<AssignmentExerciseDto> createExercise(@PathVariable("id") UUID assignmentId , @RequestBody AssignmentExerciseCreationDto dto) {
-        return ResponseEntity.ok(service.createExercise(assignmentId, dto));
     }
 
     @GetMapping("/{id}/exercises")

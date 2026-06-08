@@ -10,10 +10,11 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface AssignmentMapper extends BaseMapper<WorkoutAssignment, AssignmentDto> {
-    @Mapping(target = "studentId", source = "student.id")
-    @Mapping(target = "trainerId", source = "trainer.id")
-    @Mapping(target = "templateId", source = "template.id")
-    AssignmentDto toDto(WorkoutAssignment entity);
+    @Mapping(target = "studentId", source = "entity.student.id")
+    @Mapping(target = "trainerId", source = "entity.trainer.id")
+    @Mapping(target = "templateId", source = "entity.template.id")
+    @Mapping(target = "exerciseCount", source = "exerciseCount")
+    AssignmentDto toDto(WorkoutAssignment entity, long exerciseCount);
 
     @Mapping(target = "assignmentId", source = "assignment.id")
     @Mapping(target = "exerciseId", source = "exercise.id")

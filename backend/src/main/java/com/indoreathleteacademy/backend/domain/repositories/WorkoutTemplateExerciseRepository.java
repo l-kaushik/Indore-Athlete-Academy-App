@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface WorkoutTemplateExerciseRepository extends JpaRepository<WorkoutTemplateExercise, UUID> {
@@ -44,4 +45,6 @@ public interface WorkoutTemplateExerciseRepository extends JpaRepository<Workout
             @Param("muscleGroup") MuscleGroup muscleGroup,
             Pageable pageable
     );
+
+    List<WorkoutTemplateExercise> findAllByTemplateId(UUID templateId);
 }

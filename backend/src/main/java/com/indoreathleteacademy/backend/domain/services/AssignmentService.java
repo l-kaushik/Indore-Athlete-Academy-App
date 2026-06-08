@@ -2,7 +2,6 @@ package com.indoreathleteacademy.backend.domain.services;
 
 import com.indoreathleteacademy.backend.domain.dtos.AssignmentCreationDto;
 import com.indoreathleteacademy.backend.domain.dtos.AssignmentDto;
-import com.indoreathleteacademy.backend.domain.dtos.AssignmentExerciseCreationDto;
 import com.indoreathleteacademy.backend.domain.dtos.AssignmentExerciseDto;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
@@ -16,6 +15,5 @@ public interface AssignmentService {
     AssignmentDto getAssignmentById(UUID id);
     AssignmentDto updateStatus(UUID id, AssignmentStatus status);
 
-    AssignmentExerciseDto createExercise(UUID assignmentId, AssignmentExerciseCreationDto dto);
     Page<AssignmentExerciseDto> getExercises(UUID assignmentId, String name, ExerciseType type, MuscleGroup muscleGroup, int page, int size);
 }
