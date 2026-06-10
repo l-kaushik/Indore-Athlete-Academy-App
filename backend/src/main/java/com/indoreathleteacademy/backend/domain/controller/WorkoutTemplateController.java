@@ -27,6 +27,8 @@ public class WorkoutTemplateController {
         return ResponseEntity.ok(service.createTemplate(dto));
     }
 
+    // TODO: add method to fetch template via trainer Id
+
     // get single template based on id
     @GetMapping("/{id}")
     public ResponseEntity<WorkoutTemplateDto> getTemplateById(@PathVariable UUID id) {
@@ -36,12 +38,6 @@ public class WorkoutTemplateController {
     @PutMapping("/{id}")
     public ResponseEntity<WorkoutTemplateDto> updateTemplate(@PathVariable UUID id, @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(service.updateTemplate(id, body));
-    }
-
-
-    @PostMapping("/{id}/exercises")
-    public ResponseEntity<ExerciseDto> createExercise(@PathVariable("id") UUID templateId, @RequestBody Map<String, UUID> body) {
-        return ResponseEntity.ok(service.createExercise(templateId, body.get("exerciseId")));
     }
 
     @GetMapping("/{id}/exercises")

@@ -9,6 +9,7 @@ import org.mapstruct.Mapping;
 @Mapper(componentModel = "spring")
 public interface WorkoutTemplateMapper extends BaseMapper<WorkoutTemplate, WorkoutTemplateDto> {
 
-    @Mapping(target = "trainerId", source = "trainer.id")
-    WorkoutTemplateDto toDto(WorkoutTemplate entity);
+    @Mapping(target = "trainerId", source = "entity.trainer.id")
+    @Mapping(target = "exerciseCount", source = "count")
+    WorkoutTemplateDto toDto(WorkoutTemplate entity, long count);
 }

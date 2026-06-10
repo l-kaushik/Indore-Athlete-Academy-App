@@ -15,7 +15,6 @@ public interface WorkoutTemplateService {
     WorkoutTemplateDto getTemplateById(UUID id);
     WorkoutTemplateDto updateTemplate(UUID id, Map<String, String> body);
 
-    ExerciseDto createExercise(UUID templateId, UUID exerciseId);
     Page<ExerciseDto> getExercises(UUID templateId, String name, ExerciseType type, MuscleGroup muscleGroup, int page, int size);
 
 //    DELETE /api/v1/workout-templates/{id}

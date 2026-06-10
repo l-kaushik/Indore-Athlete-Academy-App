@@ -16,6 +16,7 @@ import com.indoreathleteacademy.backend.domain.repositories.ExerciseMasterReposi
 import com.indoreathleteacademy.backend.domain.repositories.WorkoutTemplateExerciseRepository;
 import com.indoreathleteacademy.backend.domain.repositories.WorkoutTemplateRepository;
 import com.indoreathleteacademy.backend.domain.services.WorkoutTemplateService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
@@ -24,6 +25,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -39,6 +42,7 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
     private final WorkoutTemplateMapper mapper;
     private final ExerciseMapper exerciseMapper;
 
+    @Transactional
     public @Nullable WorkoutTemplateDto createTemplate(WorkoutTemplateCreationDto dto) {
         // TODO: add validation
         log.info("Workout template creation initiated...");
@@ -46,10 +50,7 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
         String name = dto.name();
         UUID trainerId = dto.trainerId();
 
-        // TODO: test with getReferenceById and invalid UUID
-        UserAuth trainer = authRepository.findById(trainerId).orElseThrow(() ->
-                new IllegalArgumentException("Trainer not found!!")
-        );
+        UserAuth trainer = authRepository.getReferenceById(trainerId);
 
         if(name.isBlank()) name = FakerUtils.generatePrefixedName("Template");
 
@@ -59,7 +60,9 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
                 .trainer(trainer)
                 .build();
 
-        return mapper.toDto(repository.save(workoutTemplate));
+        var saved = repository.save(workoutTemplate);
+        long count = createExercise(saved, dto.exercises());
+        return mapper.toDto(saved, count);
     }
 
     @Override
@@ -84,24 +87,26 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
     }
 
     @Override
-    public ExerciseDto createExercise(UUID templateId, UUID exerciseId) {
+    private long createExercise(WorkoutTemplate template, List<UUID> exercises) {
         log.info("Adding exercise reference for template");
 
-        int orderIndex = templateExerciseRepository.findMaxOrderIndexByTemplateId(templateId);
-        var template = repository.findById(templateId).orElseThrow(() ->
-                new IllegalArgumentException("Template not found"));
-        var exercise = exerciseRepository.findById(exerciseId).orElseThrow(() ->
-                new IllegalArgumentException("Exercise not found"));
+        List<WorkoutTemplateExercise> exerciseMasterList = new ArrayList<>();
+        int orderIndex = 0;
 
-        WorkoutTemplateExercise templateExercise = WorkoutTemplateExercise.builder()
-                .template(template)
-                .exerciseMaster(exercise)
-                .orderIndex(++orderIndex)
-                .build();
+        for(var exerciseId : exercises) {
 
-        var saved = templateExerciseRepository.save(templateExercise);
+            var exercise = exerciseRepository.findById(exerciseId).orElseThrow(() ->
+                    new IllegalArgumentException("Exercise not found"));
 
-        return exerciseMapper.toDto(saved.getExerciseMaster());
+            WorkoutTemplateExercise templateExercise = WorkoutTemplateExercise.builder()
+                    .template(template)
+                    .exerciseMaster(exercise)
+                    .orderIndex(++orderIndex)
+                    .build();
+
+            exerciseMasterList.add(templateExercise);
+        }
+        return templateExerciseRepository.saveAll(exerciseMasterList).size();
     }
 
     @Override
