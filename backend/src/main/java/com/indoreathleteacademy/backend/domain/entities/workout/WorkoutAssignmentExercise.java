@@ -1,9 +1,7 @@
 package com.indoreathleteacademy.backend.domain.entities.workout;
 
 import com.indoreathleteacademy.backend.core.entities.BaseEntity;
-import com.indoreathleteacademy.backend.domain.entities.exercise.DefaultUnit;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseMaster;
-import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -33,8 +31,8 @@ public class WorkoutAssignmentExercise extends BaseEntity {
     private ExerciseMaster exercise;
 
     private String exerciseNameSnapshot;
-    private ExerciseType exerciseTypeSnapshot;
-    private DefaultUnit defaultUnitSnapshot;
+    private String exerciseTypeSnapshot;
+    private String defaultUnitSnapshot;
 
     @Column(name = "target_reps")
     private Integer targetReps;

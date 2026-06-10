@@ -10,6 +10,7 @@ import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
 import com.indoreathleteacademy.backend.domain.entities.workout.AssignmentStatus;
 import com.indoreathleteacademy.backend.domain.entities.workout.WorkoutAssignment;
 import com.indoreathleteacademy.backend.domain.entities.workout.WorkoutAssignmentExercise;
+import com.indoreathleteacademy.backend.domain.entities.workout.WorkoutTemplateExercise;
 import com.indoreathleteacademy.backend.domain.mapper.AssignmentMapper;
 import com.indoreathleteacademy.backend.domain.repositories.*;
 import com.indoreathleteacademy.backend.domain.services.AssignmentService;
@@ -21,11 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -83,27 +80,34 @@ public class AssignmentServiceImpl implements AssignmentService {
     private void validTemplateAndExercise(UUID templateId, List<AssignmentExerciseRequest> exerciseRequests) {
         log.info("Checking exercise and template exercise match");
 
-        Set<UUID> templateExercises = templateExerciseRepository.findAllByTemplateId(templateId)
+        List<UUID> templateExercises = templateExerciseRepository.findAllByTemplateId(templateId)
                 .stream()
+                .sorted(Comparator.comparing(WorkoutTemplateExercise::getOrderIndex))
                 .map(wte -> wte.getExerciseMaster().getId())
-                .collect(Collectors.toSet());
+                .toList();
 
-        Set<UUID> requestExerciseIds = exerciseRequests.stream()
-                .map(AssignmentExerciseRequest::exerciseId).collect(Collectors.toSet());
+        log.info("List of provided exercise in template: {} \n {}", templateId, templateExercises);
+
+        List<UUID> requestExerciseIds = exerciseRequests.stream()
+                .map(AssignmentExerciseRequest::exerciseId).toList();
+
+        log.info("List of provided exercise in exerciseRequest: {}", requestExerciseIds);
 
         if(templateExercises.size() != requestExerciseIds.size()) {
             throw new IllegalArgumentException("Exercise count mismatch against provided template");
         }
 
-        if(!templateExercises.containsAll(requestExerciseIds)){
-            throw new IllegalArgumentException("Exercise does not belong to template");
+        if (!templateExercises.equals(requestExerciseIds)) {
+            throw new IllegalArgumentException(
+                    "Exercises do not match the template order"
+            );
         }
     }
 
     private long createExercises(UUID assignmentId, List<AssignmentExerciseRequest> exerciseRequests) {
         log.info("Adding exercise reference for assignment");
 
-        int orderIndex = assignmentExerciseRepository.findMaxOrderIndexByAssignmentId(assignmentId);
+        int orderIndex = 0;
         List<WorkoutAssignmentExercise> assignmentExercises = new ArrayList<>();
 
         for(var dto : exerciseRequests) {
@@ -115,8 +119,8 @@ public class AssignmentServiceImpl implements AssignmentService {
                     .assignment(repository.getReferenceById(assignmentId))
                     .exercise(exercise)
                     .exerciseNameSnapshot(exercise.getName())
-                    .exerciseTypeSnapshot(exercise.getType())
-                    .defaultUnitSnapshot(exercise.getDefaultUnit())
+                    .exerciseTypeSnapshot(exercise.getType().name())
+                    .defaultUnitSnapshot(exercise.getDefaultUnit().name())
                     .targetDuration(dto.targetDuration())
                     .targetReps(dto.targetReps())
                     .targetWeight(dto.targetWeight())
