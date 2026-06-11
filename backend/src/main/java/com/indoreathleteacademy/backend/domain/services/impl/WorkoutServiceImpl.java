@@ -12,6 +12,8 @@ import com.indoreathleteacademy.backend.domain.services.WorkoutService;
 import lombok.RequiredArgsConstructor;
 import org.apache.coyote.BadRequestException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -47,15 +49,15 @@ public class WorkoutServiceImpl implements WorkoutService {
 
     @Override
     public Page<WorkoutDto> getRecentWorkouts(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size);
         UserAuth userAuth = CoreUtils.getCurrentUser();
-//        if(userAuth.getRoles().contains(Role.TRAINER))
-        return null;
+        return repository.findByStudentId(userAuth.getId(), pageable).map(mapper::toDto);
     }
 
     @Override
     public WorkoutDto setStartTime(UUID id) throws BadRequestException{
         Workout workout = repository.findById(id).orElseThrow(
-                () -> new IllegalStateException("Workout not found!!")
+                () -> new IllegalArgumentException("Workout not found!!")
         );
 
         if(workout.getEndTime() != null){
@@ -74,7 +76,7 @@ public class WorkoutServiceImpl implements WorkoutService {
     @Override
     public WorkoutDto setEndTime(UUID id) throws BadRequestException {
         Workout workout = repository.findById(id).orElseThrow(
-                () -> new IllegalStateException("Workout not found!!")
+                () -> new IllegalArgumentException("Workout not found!!")
         );
 
         if(workout.getEndTime() != null){

@@ -23,12 +23,10 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -112,7 +110,7 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
     @Override
     public Page<ExerciseDto> getExercises(UUID templateId, String name, ExerciseType type, MuscleGroup muscleGroup, int page, int size) {
        log.info("Fetching exercises for a workout template request");
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by("orderIndex").ascending());
         String normalizedName = name != null ? name.toLowerCase() : null;
         return templateExerciseRepository.findByTemplateId(templateId, normalizedName, type, muscleGroup, pageable);
     }

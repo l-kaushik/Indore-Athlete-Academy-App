@@ -63,6 +63,16 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
+    public Page<AssignmentDto> getAssignmentByStudentId(UUID studentId, int page, int size) {
+        if(!authRepository.existsById(studentId)) {
+            throw new IllegalArgumentException("Student not found!!");
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+        return repository.findAllByStudentId(studentId, pageable);
+    }
+
+    @Override
     public AssignmentDto updateStatus(UUID id, AssignmentStatus status) {
         WorkoutAssignment assignment = repository.findById(id).orElseThrow(
                 () -> new IllegalArgumentException("Workout assignment not found!!")

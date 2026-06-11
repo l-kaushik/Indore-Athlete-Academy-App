@@ -9,6 +9,7 @@ import com.indoreathleteacademy.backend.domain.services.impl.WorkoutTemplateServ
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -23,6 +24,7 @@ public class WorkoutTemplateController {
 
     // create template  api/v1/workout-templates
     @PostMapping
+    @PreAuthorize("hasRole('TRAINER')")
     public ResponseEntity<WorkoutTemplateDto> createTemplate(@RequestBody WorkoutTemplateCreationDto dto) {
         return ResponseEntity.ok(service.createTemplate(dto));
     }
@@ -36,6 +38,7 @@ public class WorkoutTemplateController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('TRAINER')")
     public ResponseEntity<WorkoutTemplateDto> updateTemplate(@PathVariable UUID id, @RequestBody Map<String, String> body) {
         return ResponseEntity.ok(service.updateTemplate(id, body));
     }

@@ -32,6 +32,15 @@ public class AssignmentController {
         return ResponseEntity.ok(service.getAssignmentById(id));
     }
 
+    @GetMapping
+    public ResponseEntity<Page<AssignmentDto>> getAssignmentByStudentId(
+            @RequestParam(name = "student") UUID studentId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(service.getAssignmentByStudentId(studentId, page, size));
+    }
+
     @GetMapping("/{id}/exercises")
     public ResponseEntity<Page<AssignmentExerciseDto>> getExercises(@PathVariable("id") UUID assignmentId,
                                                           @RequestParam(required = false) String name,
