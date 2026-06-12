@@ -28,8 +28,9 @@ public class ExerciseLog extends BaseEntity {
     @Column(name = "set_number")
     private Integer setNumber;
 
+    private Integer actualWeight;
+
     @Column(nullable = false)
     private Duration duration;
 
-    // TODO: if student ever perform with less/more weight than assigned, then we must track it here else no need
 }
