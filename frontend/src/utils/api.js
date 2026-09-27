@@ -25,7 +25,7 @@ async function doRefresh() {
 
   const res = await fetch(`${BASE_URL}/auth/refresh`, {
     method: 'POST',
-    headers: { Authorization: `Bearer ${refreshToken}` },
+    credentials: 'include'
   })
   if (!res.ok) { tokenStore.clear(); throw new Error('Session expired') }
   const data = await res.json()
@@ -78,8 +78,7 @@ async function authRequest(method, path, body) {
       try {
         const newToken = await refreshOnce()
         return rawFetch(method, path, body, newToken)
-      } catch {
-        tokenStore.clear()
+      } catch (refreshError){
         window.location.href = '/login'
         throw new Error('Session expired. Please log in again.')
       }

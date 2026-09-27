@@ -13,10 +13,7 @@ async function hydrateUser() {
   try {
     const payload = decodeJwt(token)
     if (!payload?.sub) return null
-    // sub is typically the email in Spring Security
-    const user = await userService.getByEmail(payload.sub).catch(() =>
-      userService.getByUsername(payload.sub).catch(() => null)
-    )
+    const user = await userService.getById(payload.sub).catch(() => null);
     return user
   } catch {
     return null
@@ -40,22 +37,18 @@ export function AuthProvider({ children }) {
       const tokens = await authService.login(identifier, password)
       tokenStore.setTokens(tokens.accessToken, tokens.refreshToken)
 
-      // 2. Decode JWT to find the user's email/username
+      // 2. Decode JWT to find the user's auth id
       const payload = decodeJwt(tokens.accessToken)
       const sub = payload?.sub
 
       // 3. Fetch full UserDto
       let profile = null
       if (sub) {
-        // profile = await userService.getByEmail(sub).catch(() =>
-        //   userService.getByUsername(sub).catch(() => null)
-        // )
         profile = await userService.getById(sub).catch(() => null); 
       }
       setUser(profile)
       return { success: true, role: getPrimaryRole(profile?.roles) }
     } catch (err) {
-      tokenStore.clear()
       const msg = err.message || 'Invalid credentials'
       setError(msg)
       return { success: false, error: msg }
