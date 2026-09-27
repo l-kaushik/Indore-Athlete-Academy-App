@@ -29,6 +29,10 @@ security:
     cookie-same-site: ${JWT_COOKIE_SAME_SITE}
     cookie-domain: ${JWT_COOKIE_DOMAIN}
 
+  cors:
+    primary-url: ${CORS_PRIMARY_URL}
+    secondary-url: ${CORS_SECONDARY_URL}
+
 app:
   bootstrap-admin:
     email: ${ADMIN_EMAIL}
