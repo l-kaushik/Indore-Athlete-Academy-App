@@ -1,42 +1,106 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { MOCK_STUDENTS, MOCK_TEMPLATES } from '../../data/mockData'
-import Badge from '../../components/ui/Badge'
-import { ChevronLeft, CheckCircle2, UserCheck, Dumbbell, Search, ChevronDown } from 'lucide-react'
+import { useAuth } from '../../context/AuthContext'
+import { userService }       from '../../services/userService'
+import { templateService }   from '../../services/templateService'
+import { assignmentService } from '../../services/assignmentService'
+import { secondsToDuration } from '../../utils/jwt'
+import { ChevronLeft, CheckCircle2, UserCheck, Dumbbell, Search, AlertCircle, User } from 'lucide-react'
 
-// TODO: Replace with API calls
-const students  = MOCK_STUDENTS
-const templates = MOCK_TEMPLATES
-
-const MUSCLE_COLOR = {
-  chest:    'bg-rose-500/10 text-rose-400',
-  legs:     'bg-amber-500/10 text-amber-400',
-  core:     'bg-cyan-500/10 text-cyan-400',
-  shoulder: 'bg-violet-500/10 text-violet-400',
+// Step indicator
+function Step({ n, label, active, done }) {
+  return (
+    <div className={`flex items-center gap-2 text-xs font-semibold ${active ? 'text-orange-400' : done ? 'text-emerald-400' : 'text-zinc-600'}`}>
+      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border ${
+        active ? 'border-orange-500 bg-orange-500/15 text-orange-400' :
+        done   ? 'border-emerald-500 bg-emerald-500/15 text-emerald-400' :
+                 'border-zinc-700 text-zinc-600'
+      }`}>{done ? '✓' : n}</div>
+      {label}
+    </div>
+  )
 }
 
 export default function AssignWorkout() {
-  const [student,  setStudent]  = useState(null)
-  const [template, setTemplate] = useState(null)
-  const [saving, setSaving]     = useState(false)
-  const [done, setDone]         = useState(false)
-  const [stuSearch, setStuSearch] = useState('')
-  const [tplSearch, setTplSearch] = useState('')
+  const { user } = useAuth()
+  const [step, setStep]               = useState(1)  // 1=student, 2=template, 3=targets
+  const [student,   setStudent]       = useState(null)
+  const [stuSearch, setStuSearch]     = useState('')
+  const [stuLoading,setStuLoading]    = useState(false)
+  const [stuError,  setStuError]      = useState('')
 
-  const filteredStudents  = students.filter(s =>
-    `${s.first_name} ${s.last_name} ${s.emailId}`.toLowerCase().includes(stuSearch.toLowerCase())
-  )
-  const filteredTemplates = templates.filter(t =>
-    t.name.toLowerCase().includes(tplSearch.toLowerCase())
-  )
+  const [templateId,  setTemplateId]  = useState('')
+  const [template,    setTemplate]    = useState(null)
+  const [tplExercises,setTplExercises]= useState([])
+  const [tplLoading,  setTplLoading]  = useState(false)
+  const [tplError,    setTplError]    = useState('')
+
+  // targets: { [exerciseId]: { targetReps, targetDuration, targetWeight } }
+  const [targets, setTargets] = useState({})
+
+  const [saving, setSaving] = useState(false)
+  const [done,   setDone]   = useState(false)
+  const [error,  setError]  = useState(null)
+
+  // Step 1: look up student by username
+  const searchStudent = async () => {
+    if (!stuSearch.trim()) return
+    setStuLoading(true); setStuError('')
+    try {
+      const s = await userService.getByUsername(stuSearch.trim())
+      if (!s.roles?.includes('STUDENT')) { setStuError('That user is not a Student'); return }
+      setStudent(s)
+    } catch {
+      setStuError('No student found with that username')
+    } finally { setStuLoading(false) }
+  }
+
+  // Step 2: load template by ID and its exercises
+  const loadTemplate = async () => {
+    if (!templateId.trim()) return
+    setTplLoading(true); setTplError('')
+    try {
+      const [tpl, exData] = await Promise.all([
+        templateService.getById(templateId.trim()),
+        templateService.getExercises(templateId.trim(), { size: 50 }),
+      ])
+      setTemplate(tpl)
+      const exList = exData.content ?? []
+      setTplExercises(exList)
+      const initTargets = {}
+      exList.forEach(ex => { initTargets[ex.id] = { targetReps: '', targetDuration: '', targetWeight: '' } })
+      setTargets(initTargets)
+    } catch {
+      setTplError('Template not found. Check the ID.')
+    } finally { setTplLoading(false) }
+  }
+
+  const setTarget = (exId, field, val) =>
+    setTargets(t => ({ ...t, [exId]: { ...t[exId], [field]: val } }))
 
   const handleAssign = async () => {
-    if (!student || !template) return
-    setSaving(true)
-    // TODO: await api.post('/assignments', { template_id: template.id, student_id: student.id, trainer_id: user.id })
-    await new Promise(r => setTimeout(r, 800))
-    setSaving(false)
-    setDone(true)
+    setSaving(true); setError(null)
+    try {
+      const exercises = tplExercises.map(ex => {
+        const t = targets[ex.id] || {}
+        return {
+          exerciseId:     ex.id,
+          targetReps:     t.targetReps     ? Number(t.targetReps)    : null,
+          targetDuration: t.targetDuration ? secondsToDuration(t.targetDuration) : null,
+          targetWeight:   t.targetWeight   ? Number(t.targetWeight)  : null,
+        }
+      })
+      await assignmentService.create({
+        templateId: template.id,
+        studentId:  student.id,
+        trainerId:  user.id,
+        status:     'ASSIGNED',
+        exercises,
+      })
+      setDone(true)
+    } catch (e) {
+      setError(e.message)
+    } finally { setSaving(false) }
   }
 
   if (done) return (
@@ -47,149 +111,174 @@ export default function AssignWorkout() {
         </div>
         <h2 className="text-2xl font-black text-white mb-2">Workout Assigned!</h2>
         <p className="text-zinc-400 text-sm mb-1">
-          <span className="text-white font-semibold">"{template.name}"</span> → {student.first_name} {student.last_name}
+          <span className="text-white font-semibold">"{template?.name}"</span> → {student?.fullName}
         </p>
         <p className="text-zinc-600 text-xs mb-6">Student will see it in their dashboard immediately.</p>
         <div className="flex gap-3 justify-center">
-          <button onClick={() => { setStudent(null); setTemplate(null); setDone(false) }}
+          <button onClick={() => { setStep(1); setStudent(null); setTemplate(null); setTplExercises([]); setTemplateId(''); setStuSearch(''); setDone(false) }}
             className="px-5 py-2.5 text-sm bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-semibold transition-all">
             Assign Another
           </button>
-          <Link to="/trainer/dashboard" className="btn-primary px-5 py-2.5 text-sm">Back to Dashboard</Link>
+          <Link to="/trainer/dashboard" className="btn-primary px-5 py-2.5 text-sm">Dashboard</Link>
         </div>
       </div>
     </div>
   )
 
   return (
-    <div className="max-w-4xl space-y-6">
+    <div className="max-w-2xl space-y-6">
       <div>
         <Link to="/trainer/dashboard" className="inline-flex items-center gap-1.5 text-zinc-500 hover:text-white text-sm mb-4 transition-colors">
           <ChevronLeft className="w-4 h-4" /> Back
         </Link>
         <h1 className="text-3xl font-black text-white">Assign Workout</h1>
-        <p className="text-zinc-500 text-sm mt-1">Pick a student and a template to create an assignment</p>
+        <p className="text-zinc-500 text-sm mt-1">Pick a student, a template, set targets, then assign</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Student selector */}
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-3">
-            1 · Select Student
-          </h2>
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
-            <input value={stuSearch} onChange={e => setStuSearch(e.target.value)}
-              placeholder="Search students..." className="input-base pl-9" />
-          </div>
-          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-            {filteredStudents.map(s => (
-              <button key={s.id} onClick={() => setStudent(s)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
-                  student?.id === s.id
-                    ? 'bg-orange-500/15 border border-orange-500/30'
-                    : 'hover:bg-zinc-800/70 border border-transparent'
-                }`}>
-                <div className="w-8 h-8 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center text-xs font-bold text-blue-400 shrink-0">
-                  {s.first_name[0]}{s.last_name[0]}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{s.first_name} {s.last_name}</p>
-                  <p className="text-zinc-600 text-xs">{s.emailId}</p>
-                </div>
-                {student?.id === s.id && <CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" />}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Template selector */}
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-3">
-            2 · Select Template
-          </h2>
-          <div className="relative mb-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
-            <input value={tplSearch} onChange={e => setTplSearch(e.target.value)}
-              placeholder="Search templates..." className="input-base pl-9" />
-          </div>
-          <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-            {filteredTemplates.map(t => (
-              <button key={t.id} onClick={() => setTemplate(t)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left ${
-                  template?.id === t.id
-                    ? 'bg-orange-500/15 border border-orange-500/30'
-                    : 'hover:bg-zinc-800/70 border border-transparent'
-                }`}>
-                <div className="w-8 h-8 bg-orange-500/10 border border-orange-500/20 rounded-lg flex items-center justify-center shrink-0">
-                  <Dumbbell className="w-3.5 h-3.5 text-orange-400" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-medium truncate">{t.name}</p>
-                  <p className="text-zinc-600 text-xs">{t.exercises.length} exercises</p>
-                </div>
-                {template?.id === t.id && <CheckCircle2 className="w-4 h-4 text-orange-400 shrink-0" />}
-              </button>
-            ))}
-          </div>
-        </div>
+      {/* Step indicators */}
+      <div className="flex items-center gap-4">
+        <Step n="1" label="Student"  active={step===1} done={step>1} />
+        <div className="flex-1 h-px bg-zinc-800" />
+        <Step n="2" label="Template" active={step===2} done={step>2} />
+        <div className="flex-1 h-px bg-zinc-800" />
+        <Step n="3" label="Targets"  active={step===3} done={done} />
       </div>
 
-      {/* Preview */}
-      {(student || template) && (
-        <div className="card p-5">
-          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-4">Assignment Preview</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4">
-              <p className="text-xs text-zinc-500 mb-2">Student</p>
-              {student ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center text-xs font-bold text-blue-400">
-                    {student.first_name[0]}{student.last_name[0]}
-                  </div>
-                  <div>
-                    <p className="text-white text-sm font-semibold">{student.first_name} {student.last_name}</p>
-                    <p className="text-zinc-600 text-xs">{student.emailId}</p>
-                  </div>
-                </div>
-              ) : <p className="text-zinc-600 text-sm">Not selected</p>}
+      {/* ── Step 1: Find student ── */}
+      {step === 1 && (
+        <div className="card p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest">Find Student by Username</h2>
+          <div className="flex gap-2">
+            <div className="relative flex-1">
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+              <input value={stuSearch} onChange={e => setStuSearch(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && searchStudent()}
+                placeholder="Student username…" className="input-base pl-9" />
             </div>
-            <div className="bg-zinc-900/60 border border-zinc-800 rounded-xl p-4">
-              <p className="text-xs text-zinc-500 mb-2">Template</p>
-              {template ? (
-                <div>
-                  <p className="text-white text-sm font-semibold">{template.name}</p>
-                  <p className="text-zinc-600 text-xs mt-0.5">{template.exercises.length} exercises</p>
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {template.exercises.map(ex => (
-                      <span key={ex.id} className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${MUSCLE_COLOR[ex.exercise.muscle_group] || 'bg-zinc-800 text-zinc-500'}`}>
-                        {ex.exercise.name}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ) : <p className="text-zinc-600 text-sm">Not selected</p>}
+            <button onClick={searchStudent} disabled={stuLoading || !stuSearch.trim()}
+              className="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+              {stuLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Search className="w-4 h-4" />}
+            </button>
+          </div>
+          {stuError && <p className="text-red-400 text-xs flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" />{stuError}</p>}
+          {student && (
+            <div className="bg-zinc-900/60 border border-emerald-500/30 rounded-xl p-4 flex items-center gap-3">
+              <div className="w-9 h-9 bg-blue-500/10 border border-blue-500/20 rounded-lg flex items-center justify-center text-xs font-bold text-blue-400 shrink-0">
+                {student.fullName?.split(' ').map(w=>w[0]).join('').slice(0,2)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold truncate">{student.fullName}</p>
+                <p className="text-zinc-500 text-xs">{student.email}</p>
+              </div>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
             </div>
+          )}
+          <div className="flex justify-end">
+            <button onClick={() => setStep(2)} disabled={!student}
+              className="btn-primary px-5 py-2.5 text-sm disabled:opacity-40">
+              Next: Template →
+            </button>
           </div>
         </div>
       )}
 
-      {/* Assign button */}
-      <div className="flex items-center justify-between">
-        <p className="text-zinc-600 text-sm">
-          {!student && !template ? 'Select a student and template above' :
-           !student ? 'Select a student' :
-           !template ? 'Select a template' :
-           'Ready to assign!'}
-        </p>
-        <button onClick={handleAssign} disabled={saving || !student || !template}
-          className="btn-primary px-6 py-3 text-sm flex items-center gap-2">
-          {saving
-            ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            : <><UserCheck className="w-4 h-4" /> Assign Workout</>
-          }
-        </button>
-      </div>
+      {/* ── Step 2: Load template ── */}
+      {step === 2 && (
+        <div className="card p-6 space-y-4">
+          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest">Load Template by ID</h2>
+          <p className="text-zinc-600 text-xs">Copy the template UUID from the Templates page.</p>
+          <div className="flex gap-2">
+            <input value={templateId} onChange={e => setTemplateId(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && loadTemplate()}
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" className="input-base flex-1 font-mono text-xs" />
+            <button onClick={loadTemplate} disabled={tplLoading || !templateId.trim()}
+              className="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+              {tplLoading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Load'}
+            </button>
+          </div>
+          {tplError && <p className="text-red-400 text-xs flex items-center gap-1.5"><AlertCircle className="w-3.5 h-3.5" />{tplError}</p>}
+          {template && (
+            <div className="bg-zinc-900/60 border border-emerald-500/30 rounded-xl p-4">
+              <p className="text-white font-semibold">{template.name}</p>
+              <p className="text-zinc-400 text-xs mt-0.5">{template.description}</p>
+              <p className="text-zinc-500 text-xs mt-2">{template.exerciseCount} exercises</p>
+            </div>
+          )}
+          <div className="flex justify-between">
+            <button onClick={() => setStep(1)} className="text-zinc-500 hover:text-white text-sm transition-colors">← Back</button>
+            <button onClick={() => setStep(3)} disabled={!template}
+              className="btn-primary px-5 py-2.5 text-sm disabled:opacity-40">
+              Next: Set Targets →
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Step 3: Set targets per exercise ── */}
+      {step === 3 && (
+        <div className="space-y-4">
+          <div className="card p-5">
+            <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest mb-1">Set Targets</h2>
+            <p className="text-zinc-600 text-xs">Leave fields blank to skip. Duration in seconds.</p>
+          </div>
+
+          {tplExercises.map((ex, i) => {
+            const t = targets[ex.id] || {}
+            const isTime = ex.type === 'TIME_BASED'
+            return (
+              <div key={ex.id} className="card p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-6 h-6 bg-orange-500/15 rounded-lg flex items-center justify-center text-orange-400 text-xs font-black shrink-0">{i+1}</div>
+                  <div>
+                    <p className="text-white font-semibold text-sm">{ex.name}</p>
+                    <p className="text-zinc-500 text-xs">{ex.muscleGroup?.toLowerCase()} · {ex.type?.replace('_',' ').toLowerCase()}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {isTime ? (
+                    <div className="col-span-2">
+                      <label className="block text-[10px] font-semibold text-zinc-500 uppercase tracking-wide mb-1">Duration (seconds)</label>
+                      <input type="number" min="0" value={t.targetDuration}
+                        onChange={e => setTarget(ex.id, 'targetDuration', e.target.value)}
+                        placeholder="e.g. 60" className="input-base" />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-[10px] font-semibold text-zinc-500 uppercase tracking-wide mb-1">Target Reps</label>
+                      <input type="number" min="0" value={t.targetReps}
+                        onChange={e => setTarget(ex.id, 'targetReps', e.target.value)}
+                        placeholder="e.g. 12" className="input-base" />
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-[10px] font-semibold text-zinc-500 uppercase tracking-wide mb-1">Weight (kg)</label>
+                    <input type="number" min="0" value={t.targetWeight}
+                      onChange={e => setTarget(ex.id, 'targetWeight', e.target.value)}
+                      placeholder="optional" className="input-base" />
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          {error && (
+            <div className="flex items-center gap-2 text-red-400 text-xs bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2.5">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />{error}
+            </div>
+          )}
+
+          <div className="flex justify-between items-center">
+            <button onClick={() => setStep(2)} className="text-zinc-500 hover:text-white text-sm transition-colors">← Back</button>
+            <button onClick={handleAssign} disabled={saving}
+              className="btn-primary px-6 py-3 text-sm flex items-center gap-2">
+              {saving
+                ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                : <><UserCheck className="w-4 h-4" /> Assign Workout</>
+              }
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

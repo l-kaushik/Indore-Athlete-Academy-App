@@ -1,44 +1,56 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { getPrimaryRole } from './utils/jwt'
 import Layout from './components/layout/Layout'
 
-// Auth
-import Login from './pages/auth/Login'
+import Login    from './pages/auth/Login'
 import Register from './pages/auth/Register'
 
-// Student
 import StudentDashboard from './pages/student/StudentDashboard'
-import MyWorkouts from './pages/student/MyWorkouts'
-import LogWorkout from './pages/student/LogWorkout'
+import MyWorkouts       from './pages/student/MyWorkouts'
+import LogWorkout       from './pages/student/LogWorkout'
 
-// Trainer
 import TrainerDashboard from './pages/trainer/TrainerDashboard'
-import Templates from './pages/trainer/Templates'
-import CreateTemplate from './pages/trainer/CreateTemplate'
-import AssignWorkout from './pages/trainer/AssignWorkout'
+import Templates        from './pages/trainer/Templates'
+import CreateTemplate   from './pages/trainer/CreateTemplate'
+import AssignWorkout    from './pages/trainer/AssignWorkout'
 
-// Admin
-import AdminDashboard from './pages/admin/AdminDashboard'
-import UserManagement from './pages/admin/UserManagement'
+import AdminDashboard  from './pages/admin/AdminDashboard'
+import UserManagement  from './pages/admin/UserManagement'
 
 function RoleRedirect() {
-  const { user } = useAuth()
-  if (!user) return <Navigate to="/login" replace />
-  if (user.role === 'STUDENT') return <Navigate to="/student/dashboard" replace />
-  if (user.role === 'TRAINER') return <Navigate to="/trainer/dashboard" replace />
-  if (user.role === 'ADMIN')   return <Navigate to="/admin/dashboard" replace />
-  return <Navigate to="/login" replace />
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (!user)   return <Navigate to="/login" replace />
+  const role = getPrimaryRole(user.roles)
+  if (role === 'ADMIN')   return <Navigate to="/admin/dashboard"   replace />
+  if (role === 'TRAINER') return <Navigate to="/trainer/dashboard" replace />
+  return <Navigate to="/student/dashboard" replace />
 }
 
 function ProtectedRoute({ children, role }) {
-  const { user } = useAuth()
-  if (!user) return <Navigate to="/login" replace />
-  if (role && user.role !== role) return <RoleRedirect />
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+  if (!user)   return <Navigate to="/login" replace />
+  if (role && !user.roles?.includes(role)) return <RoleRedirect />
   return children
 }
 
+function LoadingScreen() {
+  return (
+    <div className="min-h-screen bg-[#0D0D0D] flex items-center justify-center">
+      <div className="flex flex-col items-center gap-3">
+        <div className="w-8 h-8 border-2 border-zinc-700 border-t-orange-500 rounded-full animate-spin" />
+        <p className="text-zinc-500 text-sm">Loading...</p>
+      </div>
+    </div>
+  )
+}
+
 function AppRoutes() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  if (loading) return <LoadingScreen />
+
   return (
     <Routes>
       <Route path="/login"    element={user ? <RoleRedirect /> : <Login />} />
@@ -47,17 +59,17 @@ function AppRoutes() {
 
       {/* Student */}
       <Route path="/student" element={<ProtectedRoute role="STUDENT"><Layout /></ProtectedRoute>}>
-        <Route path="dashboard"          element={<StudentDashboard />} />
-        <Route path="workouts"           element={<MyWorkouts />} />
-        <Route path="workouts/:id/log"   element={<LogWorkout />} />
+        <Route path="dashboard"        element={<StudentDashboard />} />
+        <Route path="workouts"         element={<MyWorkouts />} />
+        <Route path="workouts/:id/log" element={<LogWorkout />} />
       </Route>
 
       {/* Trainer */}
       <Route path="/trainer" element={<ProtectedRoute role="TRAINER"><Layout /></ProtectedRoute>}>
-        <Route path="dashboard"        element={<TrainerDashboard />} />
-        <Route path="templates"        element={<Templates />} />
-        <Route path="templates/create" element={<CreateTemplate />} />
-        <Route path="assign"           element={<AssignWorkout />} />
+        <Route path="dashboard"         element={<TrainerDashboard />} />
+        <Route path="templates"         element={<Templates />} />
+        <Route path="templates/create"  element={<CreateTemplate />} />
+        <Route path="assign"            element={<AssignWorkout />} />
       </Route>
 
       {/* Admin */}

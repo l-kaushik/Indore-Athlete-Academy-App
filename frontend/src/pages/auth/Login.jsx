@@ -1,39 +1,32 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { getPrimaryRole } from '../../utils/jwt'
 import { Zap, Eye, EyeOff, ArrowRight, AlertCircle } from 'lucide-react'
 
-const DEMO = [
-  { label: 'Student', email: 'student@iaa.com', color: 'blue' },
-  { label: 'Trainer', email: 'trainer@iaa.com', color: 'orange' },
-  { label: 'Admin',   email: 'admin@iaa.com',   color: 'purple' },
-]
-
 export default function Login() {
-  const { login, loading, error } = useAuth()
+  const { login, error, setError } = useAuth()
   const navigate = useNavigate()
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [showPw, setShowPw]     = useState(false)
+  const [identifier, setIdentifier] = useState('')   // email or username
+  const [password, setPassword]     = useState('')
+  const [showPw, setShowPw]         = useState(false)
+  const [loading, setLoading]       = useState(false)
 
   const handleSubmit = async e => {
     e.preventDefault()
-    const { success, role } = await login(email, password)
+    setLoading(true)
+    const { success, role } = await login(identifier, password)
+    setLoading(false)
     if (success) {
-      if (role === 'STUDENT') navigate('/student/dashboard')
+      if (role === 'ADMIN')   navigate('/admin/dashboard')
       else if (role === 'TRAINER') navigate('/trainer/dashboard')
-      else navigate('/admin/dashboard')
+      else navigate('/student/dashboard')
     }
-  }
-
-  const fillDemo = (demoEmail) => {
-    setEmail(demoEmail)
-    setPassword('password123')
   }
 
   return (
     <div className="min-h-screen bg-[#0D0D0D] flex">
-      {/* Left panel */}
+      {/* Left branding panel */}
       <div className="hidden lg:flex flex-col justify-between w-[46%] p-12 border-r border-zinc-800/40 bg-gradient-to-br from-orange-950/30 via-[#0D0D0D] to-[#0D0D0D]">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/30">
@@ -41,7 +34,6 @@ export default function Login() {
           </div>
           <span className="font-bold text-white text-lg">Indore Athlete Academy</span>
         </div>
-
         <div>
           <div className="inline-flex items-center gap-2 bg-orange-500/10 border border-orange-500/20 rounded-full px-3 py-1 mb-6">
             <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse" />
@@ -57,7 +49,6 @@ export default function Login() {
             Complete fitness management for students, trainers, and administrators — all in one place.
           </p>
         </div>
-
         <div className="grid grid-cols-3 gap-3">
           {[['150+', 'Students'], ['20+', 'Trainers'], ['500+', 'Workouts']].map(([n, l]) => (
             <div key={l} className="bg-zinc-900/60 border border-zinc-800 rounded-2xl p-4">
@@ -68,10 +59,9 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Right panel */}
+      {/* Right form panel */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-[360px]">
-          {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-2.5 mb-8">
             <div className="w-9 h-9 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center">
               <Zap className="w-4 h-4 text-white" fill="white" />
@@ -80,14 +70,19 @@ export default function Login() {
           </div>
 
           <h2 className="text-3xl font-black text-white mb-1">Welcome back</h2>
-          <p className="text-zinc-500 text-sm mb-8">Sign in to continue your journey</p>
+          <p className="text-zinc-500 text-sm mb-8">Sign in with your email or username</p>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Email</label>
+              <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">
+                Email or Username
+              </label>
               <input
-                type="email" value={email} onChange={e => setEmail(e.target.value)}
-                placeholder="you@iaa.com" required
+                type="text"
+                value={identifier}
+                onChange={e => { setIdentifier(e.target.value); setError(null) }}
+                placeholder="you@example.com or your_username"
+                required
                 className="input-base"
               />
             </div>
@@ -96,8 +91,11 @@ export default function Login() {
               <label className="block text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-1.5">Password</label>
               <div className="relative">
                 <input
-                  type={showPw ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)}
-                  placeholder="••••••••" required
+                  type={showPw ? 'text' : 'password'}
+                  value={password}
+                  onChange={e => { setPassword(e.target.value); setError(null) }}
+                  placeholder="••••••••"
+                  required
                   className="input-base pr-11"
                 />
                 <button type="button" onClick={() => setShowPw(v => !v)}
@@ -123,26 +121,7 @@ export default function Login() {
             </button>
           </form>
 
-          {/* Demo accounts */}
-          <div className="mt-8 pt-6 border-t border-zinc-800/60">
-            <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest text-center mb-3">
-              Demo accounts (pw: password123)
-            </p>
-            <div className="grid grid-cols-3 gap-2">
-              {DEMO.map(({ label, email: de, color }) => (
-                <button key={label} onClick={() => fillDemo(de)}
-                  className={`text-xs py-2 rounded-xl border font-semibold transition-all ${
-                    color === 'blue'   ? 'border-blue-500/30   text-blue-400   hover:bg-blue-500/10'   :
-                    color === 'orange' ? 'border-orange-500/30 text-orange-400 hover:bg-orange-500/10' :
-                                        'border-purple-500/30 text-purple-400 hover:bg-purple-500/10'
-                  }`}>
-                  {label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <p className="text-center text-zinc-600 text-xs mt-6">
+          <p className="text-center text-zinc-600 text-xs mt-8">
             New here?{' '}
             <Link to="/register" className="text-orange-400 hover:text-orange-300 font-semibold">Create account</Link>
           </p>

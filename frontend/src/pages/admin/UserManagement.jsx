@@ -1,146 +1,160 @@
 import { useState } from 'react'
-import { ALL_USERS } from '../../data/mockData'
+import { userService } from '../../services/userService'
 import Badge from '../../components/ui/Badge'
-import { Search, X, Check, Pencil, Users, ChevronDown } from 'lucide-react'
+import { Search, Check, X, Pencil, AlertCircle, ChevronDown, Info } from 'lucide-react'
 
-// TODO: const users = await api.get('/users')
-const ROLES = ['STUDENT', 'TRAINER', 'ADMIN']
+const ROLES = ['STUDENT','TRAINER','ADMIN']
 
 export default function UserManagement() {
-  const [users, setUsers]       = useState(ALL_USERS)
-  const [search, setSearch]     = useState('')
-  const [roleFilter, setFilter] = useState('ALL')
-  const [editing, setEditing]   = useState(null)  // { userId, role }
-  const [saving, setSaving]     = useState(false)
+  const [query,     setQuery]     = useState('')
+  const [searchBy,  setSearchBy]  = useState('email')   // 'email' | 'username'
+  const [loading,   setLoading]   = useState(false)
+  const [foundUser, setFoundUser] = useState(null)
+  const [searchErr, setSearchErr] = useState('')
 
-  const filtered = users.filter(u => {
-    const matchSearch = `${u.first_name} ${u.last_name} ${u.emailId} ${u.username}`
-      .toLowerCase().includes(search.toLowerCase())
-    const matchRole = roleFilter === 'ALL' || u.role === roleFilter
-    return matchSearch && matchRole
-  })
+  const [editing,  setEditing]  = useState(null)  // { userId, role }
+  const [saving,   setSaving]   = useState(false)
+  const [saveMsg,  setSaveMsg]  = useState('')
+
+  const handleSearch = async () => {
+    if (!query.trim()) return
+    setLoading(true); setSearchErr(''); setFoundUser(null); setSaveMsg('')
+    try {
+      const user = searchBy === 'email'
+        ? await userService.getByEmail(query.trim())
+        : await userService.getByUsername(query.trim())
+      setFoundUser(user)
+    } catch {
+      setSearchErr(`No user found with that ${searchBy}`)
+    } finally { setLoading(false) }
+  }
 
   const saveRole = async () => {
     if (!editing) return
-    setSaving(true)
-    // TODO: await api.patch(`/users/${editing.userId}/role`, { role: editing.role })
-    await new Promise(r => setTimeout(r, 500))
-    setUsers(us => us.map(u => u.id === editing.userId ? { ...u, role: editing.role } : u))
-    setSaving(false)
-    setEditing(null)
+    setSaving(true); setSaveMsg('')
+    try {
+      const updated = await userService.updateRole(editing.userId, editing.role)
+      setFoundUser(updated)
+      setSaveMsg('Role updated successfully!')
+      setEditing(null)
+    } catch (e) {
+      setSaveMsg(`Error: ${e.message}`)
+    } finally { setSaving(false) }
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6 max-w-2xl">
       <div>
         <h1 className="text-3xl font-black text-white">User Management</h1>
-        <p className="text-zinc-500 text-sm mt-1">{users.length} users registered · Assign and manage roles</p>
+        <p className="text-zinc-500 text-sm mt-1">Look up users and update their roles</p>
       </div>
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative flex-1 min-w-48">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
-          <input value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search users..." className="input-base pl-9" />
-        </div>
-        <div className="flex gap-1.5 bg-zinc-900/60 border border-zinc-800 rounded-xl p-1">
-          {['ALL', ...ROLES].map(r => (
-            <button key={r} onClick={() => setFilter(r)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                roleFilter === r
-                  ? 'bg-orange-500 text-white'
-                  : 'text-zinc-400 hover:text-white'
-              }`}>
-              {r}
-            </button>
-          ))}
-        </div>
+      <div className="flex items-start gap-3 bg-amber-500/5 border border-amber-500/20 rounded-xl px-4 py-3">
+        <Info className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <p className="text-amber-300/80 text-xs">
+          The API provides user lookup by email or username. A bulk user list endpoint is not available yet — search for individual users below.
+        </p>
       </div>
 
-      {/* Table */}
-      <div className="card overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800/60">
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-zinc-500 uppercase tracking-widest">User</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-zinc-500 uppercase tracking-widest hidden md:table-cell">Username</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Role</th>
-                <th className="text-left px-5 py-3.5 text-xs font-semibold text-zinc-500 uppercase tracking-widest hidden lg:table-cell">Joined</th>
-                <th className="text-right px-5 py-3.5 text-xs font-semibold text-zinc-500 uppercase tracking-widest">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="text-center py-12 text-zinc-600">
-                    <Users className="w-8 h-8 mx-auto mb-2 text-zinc-700" />
-                    No users found
-                  </td>
-                </tr>
-              ) : filtered.map(u => (
-                <tr key={u.id} className="border-b border-zinc-800/40 last:border-0 hover:bg-zinc-800/20 transition-colors">
-                  <td className="px-5 py-3.5">
-                    <div className="flex items-center gap-3">
-                      <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
-                        u.role === 'STUDENT' ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' :
-                        u.role === 'TRAINER' ? 'bg-orange-500/10 text-orange-400 border border-orange-500/20' :
-                        'bg-purple-500/10 text-purple-400 border border-purple-500/20'
-                      }`}>
-                        {u.first_name[0]}{u.last_name[0]}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-white font-semibold truncate">{u.first_name} {u.last_name}</p>
-                        <p className="text-zinc-500 text-xs truncate">{u.emailId}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-3.5 text-zinc-400 hidden md:table-cell">@{u.username}</td>
-                  <td className="px-5 py-3.5">
-                    {editing?.userId === u.id ? (
-                      <div className="flex items-center gap-2">
-                        <div className="relative">
-                          <select value={editing.role} onChange={e => setEditing({ ...editing, role: e.target.value })}
-                            className="input-base py-1 pr-7 text-xs appearance-none cursor-pointer">
-                            {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                          </select>
-                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500 pointer-events-none" />
-                        </div>
-                        <button onClick={saveRole} disabled={saving}
-                          className="p-1.5 text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-colors">
-                          {saving ? <div className="w-3.5 h-3.5 border border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                        </button>
-                        <button onClick={() => setEditing(null)}
-                          className="p-1.5 text-zinc-500 hover:bg-zinc-800 rounded-lg transition-colors">
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <Badge value={u.role} />
-                    )}
-                  </td>
-                  <td className="px-5 py-3.5 text-zinc-500 text-xs hidden lg:table-cell">{u.joinedAt}</td>
-                  <td className="px-5 py-3.5 text-right">
-                    {editing?.userId !== u.id && (
-                      <button onClick={() => setEditing({ userId: u.id, role: u.role })}
-                        className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all font-medium">
-                        <Pencil className="w-3 h-3" /> Edit Role
-                      </button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-
-        {filtered.length > 0 && (
-          <div className="px-5 py-3 border-t border-zinc-800/60 flex items-center justify-between">
-            <p className="text-zinc-600 text-xs">Showing {filtered.length} of {users.length} users</p>
+      {/* Search bar */}
+      <div className="card p-5 space-y-3">
+        <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest">Find User</h2>
+        <div className="flex gap-2">
+          <select value={searchBy} onChange={e => setSearchBy(e.target.value)} className="input-base w-36 text-xs">
+            <option value="email">By Email</option>
+            <option value="username">By Username</option>
+          </select>
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-zinc-600" />
+            <input value={query}
+              onChange={e => { setQuery(e.target.value); setSearchErr('') }}
+              onKeyDown={e => e.key === 'Enter' && handleSearch()}
+              placeholder={searchBy === 'email' ? 'user@example.com' : 'username'}
+              className="input-base pl-9" />
           </div>
+          <button onClick={handleSearch} disabled={loading || !query.trim()}
+            className="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
+            {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : 'Search'}
+          </button>
+        </div>
+        {searchErr && (
+          <p className="text-red-400 text-xs flex items-center gap-1.5">
+            <AlertCircle className="w-3.5 h-3.5" />{searchErr}
+          </p>
         )}
       </div>
+
+      {/* Result card */}
+      {foundUser && (
+        <div className="card p-5 space-y-4">
+          <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest">User Found</h2>
+
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center text-white text-sm font-bold shrink-0">
+              {foundUser.fullName?.split(' ').map(w=>w[0]).join('').slice(0,2)}
+            </div>
+            <div>
+              <p className="text-white font-bold text-lg">{foundUser.fullName}</p>
+              <p className="text-zinc-400 text-sm">{foundUser.email}</p>
+              <p className="text-zinc-500 text-xs">@{foundUser.username} · ID: {foundUser.id?.slice(0,8)}…</p>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            {[
+              ['Joined',   foundUser.createdAt ? new Date(foundUser.createdAt).toLocaleDateString() : '—'],
+              ['Provider', foundUser.provider || 'LOCAL'],
+              ['DOB',      foundUser.dob || '—'],
+              ['City',     foundUser.address?.city || '—'],
+            ].map(([l, v]) => (
+              <div key={l} className="bg-zinc-900/60 border border-zinc-800 rounded-xl px-3 py-2.5">
+                <p className="text-zinc-500 mb-0.5">{l}</p>
+                <p className="text-white font-medium">{v}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Current roles */}
+          <div>
+            <p className="text-xs text-zinc-500 mb-2">Current roles</p>
+            <div className="flex gap-2 flex-wrap">
+              {(foundUser.roles ?? []).map(r => <Badge key={r} value={r} />)}
+            </div>
+          </div>
+
+          {/* Role editor */}
+          <div className="border-t border-zinc-800/60 pt-4">
+            <p className="text-xs font-semibold text-zinc-400 uppercase tracking-wide mb-2">Update Role</p>
+            {editing?.userId === foundUser.id ? (
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <select value={editing.role} onChange={e => setEditing({ ...editing, role: e.target.value })}
+                    className="input-base pr-7 text-sm appearance-none cursor-pointer">
+                    {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                  </select>
+                  <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-3 h-3 text-zinc-500 pointer-events-none" />
+                </div>
+                <button onClick={saveRole} disabled={saving}
+                  className="p-2 text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-colors border border-emerald-500/20">
+                  {saving ? <div className="w-4 h-4 border border-emerald-400/30 border-t-emerald-400 rounded-full animate-spin" /> : <Check className="w-4 h-4" />}
+                </button>
+                <button onClick={() => setEditing(null)}
+                  className="p-2 text-zinc-500 hover:bg-zinc-800 rounded-xl transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setEditing({ userId: foundUser.id, role: foundUser.roles?.[0] || 'STUDENT' })}
+                className="inline-flex items-center gap-2 text-xs px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-white rounded-xl font-semibold transition-all">
+                <Pencil className="w-3.5 h-3.5" /> Change Role
+              </button>
+            )}
+            {saveMsg && (
+              <p className={`text-xs mt-2 ${saveMsg.startsWith('Error') ? 'text-red-400' : 'text-emerald-400'}`}>{saveMsg}</p>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
