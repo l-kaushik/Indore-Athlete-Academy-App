@@ -5,8 +5,10 @@ import com.indoreathleteacademy.backend.domain.dtos.WorkoutTemplateCreationDto;
 import com.indoreathleteacademy.backend.domain.dtos.WorkoutTemplateDto;
 import com.indoreathleteacademy.backend.domain.entities.exercise.ExerciseType;
 import com.indoreathleteacademy.backend.domain.entities.exercise.MuscleGroup;
+import com.indoreathleteacademy.backend.domain.entities.workout.WorkoutTemplate;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -15,6 +17,7 @@ public interface WorkoutTemplateService {
     WorkoutTemplateDto getTemplateById(UUID id);
     WorkoutTemplateDto updateTemplate(UUID id, Map<String, String> body);
 
+    long createExercise(WorkoutTemplate template, List<UUID> exercises);
     Page<ExerciseDto> getExercises(UUID templateId, String name, ExerciseType type, MuscleGroup muscleGroup, int page, int size);
 
 //    DELETE /api/v1/workout-templates/{id}

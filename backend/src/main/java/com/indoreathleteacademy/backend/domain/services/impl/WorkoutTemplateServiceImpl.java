@@ -85,7 +85,7 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
     }
 
     @Override
-    private long createExercise(WorkoutTemplate template, List<UUID> exercises) {
+    public long createExercise(WorkoutTemplate template, List<UUID> exercises) {
         log.info("Adding exercise reference for template");
 
         List<WorkoutTemplateExercise> exerciseMasterList = new ArrayList<>();
@@ -115,8 +115,8 @@ public class WorkoutTemplateServiceImpl implements WorkoutTemplateService {
         return templateExerciseRepository.findByTemplateId(templateId, normalizedName, type, muscleGroup, pageable);
     }
 
-    @Override
-    public void removeExercise(UUID templateId, UUID exerciseId) {
-
-    }
+//    @Override
+//    public void removeExercise(UUID templateId, UUID exerciseId) {
+//
+//    }
 }
