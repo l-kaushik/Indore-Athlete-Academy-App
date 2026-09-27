@@ -4,7 +4,6 @@ import com.indoreathleteacademy.backend.auth.dtos.UserDto;
 import com.indoreathleteacademy.backend.auth.entities.Role;
 import com.indoreathleteacademy.backend.auth.services.UserService;
 import lombok.AllArgsConstructor;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -38,7 +37,7 @@ public class UserController {
     }
 
     @GetMapping("/id/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or @userSecurity.isSameUser(#id, authentication)")
     ResponseEntity<UserDto> getUserById(@PathVariable("id") String id) {
         return ResponseEntity.ok(userService.getUserById(id));
     }
