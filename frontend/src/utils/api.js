@@ -43,6 +43,7 @@ async function rawFetch(method, path, body, overrideToken) {
   const res = await fetch(`${BASE_URL}${path}`, {
     method,
     headers,
+    credentials: 'include',
     ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
   })
 

@@ -60,7 +60,7 @@ export default function UserManagement() {
       <div className="card p-5 space-y-3">
         <h2 className="text-sm font-semibold text-zinc-400 uppercase tracking-widest">Find User</h2>
         <div className="flex gap-2">
-          <select value={searchBy} onChange={e => setSearchBy(e.target.value)} className="input-base w-36 text-xs">
+          <select value={searchBy} onChange={e => setSearchBy(e.target.value)} className="input-base w-36 text-xs flex-1">
             <option value="email">By Email</option>
             <option value="username">By Username</option>
           </select>
@@ -70,7 +70,7 @@ export default function UserManagement() {
               onChange={e => { setQuery(e.target.value); setSearchErr('') }}
               onKeyDown={e => e.key === 'Enter' && handleSearch()}
               placeholder={searchBy === 'email' ? 'user@example.com' : 'username'}
-              className="input-base pl-9" />
+              className="input-base !pl-8" />
           </div>
           <button onClick={handleSearch} disabled={loading || !query.trim()}
             className="btn-primary px-4 py-2.5 text-sm flex items-center gap-2">
