@@ -5,14 +5,11 @@ const BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8080') + '/a
 // ── Token storage ─────────────────────────────────────────────────────────────
 export const tokenStore = {
   getAccess:    () => localStorage.getItem('accessToken'),
-  getRefresh:   () => localStorage.getItem('refreshToken'),
   setTokens:    (access, refresh) => {
     localStorage.setItem('accessToken', access)
-    if (refresh) localStorage.setItem('refreshToken', refresh)
   },
   clear:        () => {
     localStorage.removeItem('accessToken')
-    localStorage.removeItem('refreshToken')
   },
 }
 
@@ -20,16 +17,13 @@ export const tokenStore = {
 let refreshPromise = null  // deduplicate concurrent refresh calls
 
 async function doRefresh() {
-  const refreshToken = tokenStore.getRefresh()
-  if (!refreshToken) throw new Error('No refresh token')
-
   const res = await fetch(`${BASE_URL}/auth/refresh`, {
     method: 'POST',
     credentials: 'include'
   })
   if (!res.ok) { tokenStore.clear(); throw new Error('Session expired') }
   const data = await res.json()
-  tokenStore.setTokens(data.accessToken, data.refreshToken)
+  tokenStore.setTokens(data.accessToken)
   return data.accessToken
 }
 
